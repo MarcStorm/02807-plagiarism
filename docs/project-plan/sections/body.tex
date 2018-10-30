@@ -1,16 +1,24 @@
 \section{Project to make}
+This project will design and implement a plagiarism algorithm for checking documents against \emph{Wikipedia} pages. The program will be able to handle large documents and will achieve fast processing through massively parallel computation and the \emph{MapReduce} programming model. For demonstrating the algorithm, \emph{Docker} images will be used to emulate nodes in a larger data center.
+
 
 \section{Timeline}
-\subsubsection{Committed goals}
-\begin{enumerate}
-    \item 
-    \item 
-    \item 
-    \item 
-\end{enumerate}
+The project is divided into 3 working weeks of the semester where subgoals are set for each week.
 
-\subsubsection{Stretch goals}
-\begin{enumerate}
-    \item 
-    \item 
-\end{enumerate}
+\paragraph{Week 10}
+\begin{itemize}
+    \item Reading material: \cite{leskovec2014mining} chapter 6: \emph{Frequent Itemsets} and \cite{huang2008similarity}
+    \item Simple model: Implement working example of a plagiarism algorithm using sample data on small documents
+\end{itemize}
+
+\paragraph{Week 11}
+\begin{itemize}
+    \item Extended model: Extend the simple model to include phrases from the \emph{Wikipedia} database
+\end{itemize}
+
+\paragraph{Week 12}
+\begin{itemize}
+    \item Parallel model: Implement \emph{MapReduce} on the extended model to allow for massively parallel computation of large documents
+\end{itemize}
+
+
