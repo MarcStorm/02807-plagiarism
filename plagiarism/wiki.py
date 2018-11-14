@@ -3,12 +3,6 @@ import os
 import bz2
 import xml.etree.ElementTree as xml
 
-try:
-    import config
-except ImportError:
-    print("Please configure config file")
-    sys.exit(1)
-
 
 class Wiki():
     """
@@ -28,14 +22,26 @@ class Wiki():
             If neither of the files are given (None) the file
             paths will be read from the config.py file
         """
-        self.article_path = article_path if article_path is not None \
-            else config.WIKI_ARTICLE_PATH
-        self.index_path = index_path if index_path is not None \
-            else config.WIKI_INDEX_PATH
+        self.article_path = article_path
+        self.index_path = index_path
+
+        if article_path is None or index_path is None:
+            self._init_from_config()
 
         self.index = iter(WikiIndex(self.index_path))
         self.articles = WikiArchive(self.article_path)
 
+
+    def _init_from_config(self):
+        try:
+            import config
+        except ImportError:
+            print("Missing configuration file")
+            sys.exit(1)
+        if self.article_path is None:
+            self.article_path = config.WIKI_ARTICLE_PATH
+        if self.index_path is None:
+            self.index_path = config.WIKI_INDEX_PATH
 
     def __iter__(self):
         return self
