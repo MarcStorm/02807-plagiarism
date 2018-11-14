@@ -349,3 +349,6 @@ modules.xml
 
 wiki/
 litterature/
+
+# Ignore developer sensitive config file (use config.example.py)
+config.py
