@@ -1,34 +1,40 @@
-import sys
 import os
 import mmh3
 from nltk import ngrams
 import pickle
-from itertools import combinations
 
-#################### Utilities ######################
-#hashes a list of strings
-def listhash(l,seed):
+# ------------------- Utilities -------------------
+
+'''hashes a list of strings'''
+
+
+def listhash(l, seed):
 	val = 0
 	for e in l:
 		val = val ^ mmh3.hash(e, seed)
 	return val
 
+
 def shingle(q, s):
 	shingles = ngrams(s.split(), q)
 	return list(shingles)
 
-def minhash(shingles,k):
-	return [ min([listhash(s, seed) for s in shingles]) for seed in range(k) ]
 
-def signatures(docs,q,k):
-	newDocs = {}
+def minhash(shingles,k):
+	return [min([listhash(s, seed) for s in shingles]) for seed in range(k)]
+
+
+def signatures(docs, q, k):
+	new_docs = {}
 	for key, value in docs.items():
-		newDocs[key] = minhash(shingle(q,value),k)
+		new_docs[key] = minhash(shingle(q, value), k)
 		print('Processed document: {}'.format(key))
-	return newDocs
+	return new_docs
+
 
 def signature_document(doc_content, q, k):
-	return minhash(shingle(q,doc_content),k)
+	return minhash(shingle(q, doc_content), k)
+
 
 def jaccard(doc1_signature, doc2_signature):
 
@@ -37,20 +43,23 @@ def jaccard(doc1_signature, doc2_signature):
 
 	return (len(doc1_signature & doc2_signature))/k
 
+
 def split_list(l, chunks):
 	for i in range(0, len(l), chunks):
 		yield l[i:i+chunks]
 
+
 def partition_signature(signature):
 	return [tuple(rows) for rows in split_list(signature, r)]
+
 
 def signature_matrix(signatures, b, r):
 
 	matrix = [dict() for i in range(b)]
 
-	for (key,value) in signatures.items():
+	for (key, value) in signatures.items():
 		new_value = key
-		for (i,bucket_key) in enumerate(partition_signature(value)):
+		for (i, bucket_key) in enumerate(partition_signature(value)):
 			# Check if key exists, if not create empty list and append value
 			# otherwise it will get the exsisting list and append value.
 			if bucket_key in matrix[i]:
@@ -59,6 +68,7 @@ def signature_matrix(signatures, b, r):
 				matrix[i][bucket_key] = [new_value]
 
 	return matrix
+
 
 def candidates(signature, signature_matrix, q = 7, k = 100):
 
@@ -74,32 +84,34 @@ def candidates(signature, signature_matrix, q = 7, k = 100):
 
 	return list(set(c))
 
-################### Similarity ######################
-docs = {} #dictionary mapping document id to document contents
+# ------------------- Similarity -------------------
+
+
+docs = {}  # dictionary mapping document id to document contents
 sigs = {}
-b = 20 # number of bands
-r = 5 # number of rows
+b = 20  # number of bands
+r = 5  # number of rows
 threshold = (1.0/b)**(1.0/r)
-q = 7 # length of shingle
-k = b*r # number of minhashes
+q = 7  # length of shingle
+k = b*r  # number of minhashes
 
 # read data sets
 srcfolder = os.path.dirname(os.path.abspath(__file__))
 data_folder_name = 'ats_corpus_small'
 datafolder = os.path.join(srcfolder, data_folder_name)   # change to ats_corpus for large data set
 outfile = 'sigs_{}.pickle'.format(data_folder_name)
-#for comb in combinations(list(sigs.keys()), 2):
+# for comb in combinations(list(sigs.keys()), 2):
 #	print('Similarity of {} and {} is: {}'.format(comb[0], comb[1], jaccard(comb[0], comb[1])))
 
 if os.path.exists(outfile):
-	sigs = pickle.load(open(outfile, "rb" ) )
+	sigs = pickle.load(open(outfile, "rb"))
 else:
 	for file in os.listdir(datafolder):
-	    filepath = os.path.join(datafolder, file)
-	    f = open(filepath, 'r')
-	    docs[file] = f.read()
-	    print('read document ' + file)
-	    f.close()
+		filepath = os.path.join(datafolder, file)
+		f = open(filepath, 'r')
+		docs[file] = f.read()
+		print('read document ' + file)
+		f.close()
 
 	print('Create signatures')
 	sigs = signatures(docs, q, k)
