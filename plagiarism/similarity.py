@@ -20,7 +20,7 @@ def shingle(q, s):
 	return list(shingles)
 
 
-def minhash(shingles,k):
+def minhash(shingles, k):
 	return [min([listhash(s, seed) for s in shingles]) for seed in range(k)]
 
 
