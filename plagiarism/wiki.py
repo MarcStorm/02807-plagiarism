@@ -61,8 +61,6 @@ class Wiki():
 
 
 
-
-
 class WikiArchive():
     """
     WikiArchive is an object which can read uncompress data from a
@@ -290,7 +288,29 @@ class WikiIndex():
 
 
 if __name__ == '__main__':
-    wiki = Wiki()
-    print("Article: {}".format(wiki.article_path))
-    print("Index: {}".format(wiki.index_path))
-    next(iter(wiki))
+    import argparse
+
+    def a():
+        print("this is a")
+
+    def b():
+        print("this is b")
+
+    parser = argparse.ArgumentParser(description='Manipulate wikipedia database.')
+    
+    subparsers = parser.add_subparsers()
+
+    parser_a = subparsers.add_parser('a', help='a help')
+    parser_a.add_argument('bar', type=int, help='bar help')
+    parser_a.set_defaults(func=a)
+
+    # create the parser for the "b" command
+    parser_b = subparsers.add_parser('b', help='b help')
+    parser_b.add_argument('--baz', choices='XYZ', help='baz help')
+    parser_b.set_defaults(func=b)
+
+    args = parser.parse_args()
+
+    if args.func is not None:
+        args.func(args)
+
