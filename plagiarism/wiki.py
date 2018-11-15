@@ -203,7 +203,7 @@ class Article():
 
 class Archive():
     """
-    Archive is an object which can read uncompress data from a
+    Archive is an object which can read compressed data from a
     wikipedia multistream data dump.
     """
 
