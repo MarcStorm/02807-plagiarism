@@ -1,7 +1,9 @@
 import sys
 import os
 import bz2
+from contextlib import contextmanager
 import xml.etree.ElementTree as xml
+from xml.dom import minidom
 
 
 class Wiki():
@@ -28,8 +30,10 @@ class Wiki():
         if article_path is None or index_path is None:
             self._init_from_config()
 
-        self.index = iter(Index(self.index_path))
-        self.articles = Archive(self.article_path)
+        self.index = Index(self.index_path)
+        self.archive = Archive(self.article_path)
+
+        self.current_block = None
 
 
     def _init_from_config(self):
@@ -44,20 +48,83 @@ class Wiki():
             self.index_path = config.WIKI_INDEX_PATH
 
     def __iter__(self):
+        self.index_iter = iter(self.index)
         return self
 
 
     def __next__(self):
-        seek_start, seek_end, docs = next(self.index)
-        articles = self.articles._decompress_block(seek_start, seek_end)
-        assert len(articles) == len(docs)
-        if not os.path.exists("out"):
-            os.mkdir("out")
-        for i, a in enumerate(articles):
-            with open("out/test_{}.xml".format(i), "wb") as f:
-                f.write(a)
-        print("Saved {} articles to folder ./out".format(len(articles)))
-        return docs
+        try:
+            return Article(next(self.current_block))
+        except (StopIteration, TypeError):
+            seek_start, seek_end, _ = next(self.index_iter)
+            self.current_block = self.archive.get_block(seek_start, seek_end)
+            return self.__next__()
+
+
+    def find_article(self, article_id):
+        """
+        Finds a single article with an article_id and returns it
+
+        Args:
+            article_id (int): the article id to search for
+
+        Note:
+            Raises ArticleNotFound exception when the article could
+            not be found
+        """
+        start, end, _ = self.index.find_article(article_id)
+        for content in self.archive.get_block(start, end):
+            article = Article(content)
+            if article.id == article_id:
+                return article
+        raise ArticleNotFound("article with id {} not found".format(article_id))
+
+
+
+
+class Article():
+    """
+    Article represents a wikipedia article extracted from an archive.
+    Used to read and manipulate the content of the article as well as
+    gathering metadata from the article.
+    """
+
+    def __init__(self, content_xml):
+        """
+        Creates a new article object from a bytearray which is the XML
+        of the the document itself
+
+        Args:
+            content_xml (bytearray): the content of the article in XML
+        """
+        self.content = content_xml
+        self.root = xml.fromstring(self.content)
+        self.id = int(self.root.find("id").text)
+        self.title = str(self.root.find("title").text)
+
+    def __str__(self):
+        return "id: {}, title: {}".format(self.id, self.title)
+
+    def string(self):
+        return self.content.decode(encoding='utf-8')
+
+    def text(self):
+        return str(self.root.find("text").text)
+
+    def pretty(self):
+        dom = minidom.parseString(self.string())
+        return dom.toprettyxml(indent="\t")
+
+    def save(self, file_path):
+        """
+        Saves the article content to an XML file
+
+        Args:
+            file_path (str): path to the XML file to save
+        """
+        with open(file_path, 'wb') as f:
+            f.write(self.content)
+
 
 
 
@@ -79,12 +146,12 @@ class Archive():
         self.article_path = article_path
         self.archive = open(self.article_path, 'rb')
 
-    def _decompress_block(self, start_block, end_block):
+    def get_block(self, start_block, end_block):
         """
         Decompress a block of articles and return each documents XML
 
         Return:
-            doclist (list): list of bytes for each XML document
+            doclist (iter): iterable sequence of bytearrays for each XML document
         """
         articles = list()
         self.archive.seek(start_block)
@@ -98,7 +165,7 @@ class Archive():
             articles.append(content[last_idx:idx])
             last_idx = idx
             idx = content.find(Archive.DELIMITER, last_idx)
-        return articles
+        return iter(articles)
 
 
 
@@ -121,6 +188,14 @@ class Index():
         self.index_path = index_path
         self.index = iter(open(self.index_path, 'r', encoding='latin-1'))
         self._last_index = None
+
+    @contextmanager
+    def open(self):
+        f = open(self.index_path, 'r', encoding='latin-1')
+        try:
+            yield f
+        finally:
+            f.close()
 
 
     @property
@@ -170,7 +245,7 @@ class Index():
             The start_seek must point to the exact start byte of a line where the article index
             can be found. Not honering so may produce corrupt results.
         """
-        with open(self.index_path) as f:
+        with self.open() as f:
             f.seek(0, 2)
             end = f.tell()
             f.seek(start_seek)
@@ -218,8 +293,11 @@ class Index():
             start (int): the byte at which the block starts
             end (int): the byte at which the block ends
             docs (list): a list of documents (including the one searched for)
+
+        Raises:
+            ArticleNotFound : if the article id was not found in the index
         """
-        with open(self.index_path) as f:
+        with self.open() as f:
             f.seek(0, 2)
             begin = 0
             end = f.tell()
@@ -231,7 +309,7 @@ class Index():
                     _, docid, _ = self._get_doc_info(f.readline())
                     if article_id == docid:
                         return self._find_block(before)
-                return None
+                raise ArticleNotFound("article id {} not found in index".format(article_id))
 
             last = None
             while begin < end:
@@ -283,34 +361,67 @@ class Index():
         self._last_index = index
         return seek_range
 
-    
+
+
+class ArticleNotFound(Exception):
+    """
+    Raisen when no article could be found
+    """
+    pass 
 
 
 
 if __name__ == '__main__':
     import argparse
 
-    def a():
-        print("this is a")
+    wiki = Wiki()
 
-    def b():
-        print("this is b")
+    def cmd_list(args):
+        if args.out is not None:
+            if not os.path.exists(args.out):
+                os.mkdir(args.out)
+        for i, article in enumerate(wiki):
+            if i >= args.limit:
+                break
+            if not args.quiet:
+                print(article)
+            if args.out is not None:
+                name = "article_{}.xml".format(article.id)
+                article.save(os.path.join(args.out, name))
+                
 
+    def cmd_find(args):
+        article = wiki.find_article(args.id)
+        if not args.quiet:
+            print(article)
+        if args.out is not None:
+            article.save(args.out)
+
+    # Main parser
     parser = argparse.ArgumentParser(description='Manipulate wikipedia database.')
-    
-    subparsers = parser.add_subparsers()
 
-    parser_a = subparsers.add_parser('a', help='a help')
-    parser_a.add_argument('bar', type=int, help='bar help')
-    parser_a.set_defaults(func=a)
+    # Common parser (common flags, used for inheritance)
+    parse_common = argparse.ArgumentParser(add_help=False)
+    parse_common.add_argument('-q', '--quiet', action='store_true', help='omit output to stdout')
 
-    # create the parser for the "b" command
-    parser_b = subparsers.add_parser('b', help='b help')
-    parser_b.add_argument('--baz', choices='XYZ', help='baz help')
-    parser_b.set_defaults(func=b)
+    subparsers = parser.add_subparsers(help='commands')
+
+    # Parser for ls command
+    parse_list = subparsers.add_parser('ls', help='list articles in order', parents=[parse_common])
+    parse_list.add_argument('-l', '--limit', type=int, metavar='N', help='limit to first N articles', default=max)
+    parse_list.add_argument('out', type=str, metavar='FOLDER', help='extract articles to folder', nargs='?')
+    parse_list.set_defaults(func=cmd_list)
+
+    # Parser for find command
+    parse_find = subparsers.add_parser('find', help='find a single article by id', parents=[parse_common])
+    parse_find.add_argument('id', type=int, metavar='ID', help='article id to search for')
+    parse_find.add_argument('out', type=str, metavar='FILE', help='extract article to file', nargs='?')
+    parse_find.set_defaults(func=cmd_find)
 
     args = parser.parse_args()
 
-    if args.func is not None:
+    if 'func' in args:
         args.func(args)
+    else:
+        parser.print_help()
 
