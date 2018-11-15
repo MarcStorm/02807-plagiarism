@@ -35,6 +35,7 @@ class Wiki():
 
         self.current_block = None
 
+
     @property
     def config(self):
         try:
@@ -107,18 +108,23 @@ class Article():
         self.id = int(self.root.find("id").text)
         self.title = str(self.root.find("title").text)
 
+
     def __str__(self):
         return "id: {}, title: {}".format(self.id, self.title)
+
 
     def string(self):
         return self.content.decode(encoding='utf-8')
 
+
     def text(self):
         return str(self.root.find("text").text)
+
 
     def pretty(self):
         dom = minidom.parseString(self.string())
         return dom.toprettyxml(indent="\t")
+
 
     def save(self, file_path):
         """
