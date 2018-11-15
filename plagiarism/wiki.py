@@ -28,8 +28,8 @@ class Wiki():
         if article_path is None or index_path is None:
             self._init_from_config()
 
-        self.index = iter(WikiIndex(self.index_path))
-        self.articles = WikiArchive(self.article_path)
+        self.index = iter(Index(self.index_path))
+        self.articles = Archive(self.article_path)
 
 
     def _init_from_config(self):
@@ -61,9 +61,9 @@ class Wiki():
 
 
 
-class WikiArchive():
+class Archive():
     """
-    WikiArchive is an object which can read uncompress data from a
+    Archive is an object which can read uncompress data from a
     wikipedia multistream data dump.
     """
 
@@ -92,21 +92,21 @@ class WikiArchive():
         content = bz2.decompress(compressed)
 
         last_idx = 0
-        idx = content.find(WikiArchive.DELIMITER)
+        idx = content.find(Archive.DELIMITER)
         while idx >= 0 and last_idx != idx:
-            idx += len(WikiArchive.DELIMITER)
+            idx += len(Archive.DELIMITER)
             articles.append(content[last_idx:idx])
             last_idx = idx
-            idx = content.find(WikiArchive.DELIMITER, last_idx)
+            idx = content.find(Archive.DELIMITER, last_idx)
         return articles
 
 
 
 
 
-class WikiIndex():
+class Index():
     """
-    WikiIndex is an iterable object which read indexes from a wikipedia
+    Index is an iterable object which read indexes from a wikipedia
     index file in blocks one by one. Also facilitates binary search in index file 
     given an article id amongst other utilities related to the index file.
     """
