@@ -9,8 +9,12 @@ from xml.dom import minidom
 
 class Wiki():
     """
-    Wiki is an iterable object which reads articles from a compressed 
-    muiltistream dump of wikipedia and decompresses articles
+    Wiki is an object which reads articles from a compressed muiltistream 
+    dump of wikipedia and decompresses articles.
+
+    Summary:
+        items(): returns an iterator for the articles in the wiki
+        find_article(article_id): find a specific article in the wiki
     """
 
     def __init__(self, article_path=None, index_path=None):
@@ -53,19 +57,15 @@ class Wiki():
         if self.index_path is None:
             self.index_path = self.config.WIKI_INDEX_PATH
 
+    
+    def items(self, **kwargs):
+        """
+        Returns an iterator for the articles in the wiki
 
-    def __iter__(self):
-        self.index_iter = iter(self.index)
-        return self
-
-
-    def __next__(self):
-        try:
-            return Article(next(self.current_block))
-        except (StopIteration, TypeError):
-            seek_start, seek_end, _ = next(self.index_iter)
-            self.current_block = self.archive.get_block(seek_start, seek_end)
-            return self.__next__()
+        Args:
+            **kwargs: see constructor for _Iterator class
+        """
+        return Wiki._Iterator(self, **kwargs)
 
 
     def find_article(self, article_id):
@@ -85,6 +85,56 @@ class Wiki():
             if article.id == article_id:
                 return article
         raise ArticleNotFound("article with id {} not found".format(article_id))
+
+
+    def __iter__(self):
+        """
+        Default iterator for wiki articles with no filtering
+        """
+        return self.items()
+
+
+    class _Iterator():
+        """
+        Private iterator class which iterates the articles in the wiki
+        given some parameters. Facilitates filtering. An instance of the
+        iterator is returned when calling items() on the parented wiki
+        instance.
+        """
+
+        def __init__(self, wiki, filter_redirects=False):
+            """
+            Creates a new iterator from a wiki instance. Supports keywords
+            used to filter the stream of articles from the wiki.
+
+            Args:
+                wiki (Wiki): the wiki instance from which the iterator will run
+                filter_redirects (bool): filter out redirected articles
+            """
+            self.index = Index(wiki.index_path)
+            self.archive = Archive(wiki.article_path)
+
+            self.filter_redirects = filter_redirects
+
+            self.current_block = None
+
+
+        def __iter__(self):
+            self.index_iter = iter(self.index)
+            return self
+
+
+        def __next__(self):
+            try:
+                article = Article(next(self.current_block))
+                if self.filter_redirects and article.is_redirect:
+                    return self.__next__()
+                return article
+            except (StopIteration, TypeError):
+                seek_start, seek_end, _ = next(self.index_iter)
+                self.current_block = self.archive.get_block(seek_start, seek_end)
+                return self.__next__()
+
 
 
 
@@ -404,7 +454,8 @@ if __name__ == '__main__':
         if args.out is not None:
             if not os.path.exists(args.out):
                 os.mkdir(args.out)
-        for i, article in enumerate(wiki):
+        items = wiki.items(filter_redirects=args.direct)
+        for i, article in enumerate(items):
             if i >= args.limit:
                 break
             if not args.quiet:
@@ -434,6 +485,7 @@ if __name__ == '__main__':
     parse_list = subparsers.add_parser('ls', help='list articles in order', parents=[parse_common])
     parse_list.add_argument('-l', '--limit', type=int, metavar='N', help='limit to first N articles', default=max)
     parse_list.add_argument('out', type=str, metavar='FOLDER', help='extract articles to folder', nargs='?')
+    parse_list.add_argument('-d', '--direct', action='store_true', help='filter out redirected articles')
     parse_list.set_defaults(func=cmd_list)
 
     # Parser for find command
