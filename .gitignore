@@ -347,6 +347,13 @@ modules.xml
 
 # End of https://www.gitignore.io/api/macos,python,windows,intellij,pycharm+all
 
+### VisualStudioCode ###
+.vscode/
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+
 wiki/
 litterature/
 

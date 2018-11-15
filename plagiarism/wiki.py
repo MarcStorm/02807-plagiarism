@@ -1,10 +1,23 @@
 import sys
 import os
 import bz2
+from enum import Enum
 from contextlib import contextmanager
 from functools import lru_cache as cache
 import xml.etree.ElementTree as xml
 from xml.dom import minidom
+import mwparserfromhell
+
+
+
+class Format(Enum):
+    """
+    An enumeration of different article formats to export
+    """
+    XML = "xml"
+    TEXT = "text"
+    CLEAN = "clean"
+
 
 
 class Wiki():
@@ -176,14 +189,32 @@ class Article():
 
 
     def string(self):
+        """
+        Decodes the XML file to utf-8 and returns a string object
+        """
         return self.content.decode(encoding='utf-8')
 
 
     def text(self):
+        """
+        Returns the markup text of the article without XML.
+        """
         return str(self.root.find("revision").find("text").text)
+
+    
+    def clean(self):
+        """
+        Cleans the markup and returns a text-only version of
+        the article without any markup, links, html etc.
+        """
+        code = mwparserfromhell.parse(self.text())
+        return code.strip_code(normalize=True, collapse=True)
 
 
     def pretty(self):
+        """
+        Prettyfies the XML markup and indents it with tabs.
+        """
         dom = minidom.parseString(self.string())
         return dom.toprettyxml(indent="\t")
 
@@ -197,6 +228,27 @@ class Article():
         """
         with open(file_path, 'wb') as f:
             f.write(self.content)
+
+    
+    def export(self, fmt=Format.XML, folder='./out', prefix='article'):
+        """
+        Exports the article into another format and writes it to a file
+        """
+        extensions = {
+            Format.XML: "xml",
+            Format.TEXT: "txt",
+            Format.CLEAN: "txt",
+        }
+        name = "{}_{}.{}".format(prefix, self.id, extensions[fmt])
+        with open(os.path.join(folder, name), 'wb') as f:
+            if fmt == Format.XML:
+                f.write(self.content)
+            elif fmt == Format.TEXT:
+                f.write(self.text().encode('utf-8'))
+            elif fmt == Format.CLEAN:
+                f.write(self.clean().encode('utf-8'))
+            else:
+                raise ValueError("{} is not a regocnized format".format(fmt))
 
 
 
@@ -441,7 +493,7 @@ class ArticleNotFound(Exception):
     """
     Raisen when no article could be found
     """
-    pass 
+    pass
 
 
 
@@ -461,8 +513,7 @@ if __name__ == '__main__':
             if not args.quiet:
                 print(article)
             if args.out is not None:
-                name = "article_{}.xml".format(article.id)
-                article.save(os.path.join(args.out, name))
+                article.export(folder=args.out, prefix=args.prefix, fmt=Format(args.mode))
                 
 
     def cmd_find(args):
@@ -470,28 +521,39 @@ if __name__ == '__main__':
         if not args.quiet:
             print(article)
         if args.out is not None:
-            article.save(args.out)
+            article.export(folder=args.out, prefix=args.prefix, fmt=Format(args.mode))
+
 
     # Main parser
-    parser = argparse.ArgumentParser(description='Manipulate wikipedia database.')
+    parser = argparse.ArgumentParser(
+        description='Manipulate wikipedia database.'
+    )
 
     # Common parser (common flags, used for inheritance)
     parse_common = argparse.ArgumentParser(add_help=False)
-    parse_common.add_argument('-q', '--quiet', action='store_true', help='omit output to stdout')
+    parse_common.add_argument('-q', '--quiet', action='store_true', 
+        help='omit output to stdout')
+
+    mode_group = parse_common.add_mutually_exclusive_group()
+    mode_group.add_argument('-X', '--xml', help="set write mode to xml", action='store_const', const='xml', dest='mode')
+    mode_group.add_argument('-T', '--txt', help="set write mode to text", action='store_const', const='text', dest='mode')
+    mode_group.add_argument('-C', '--clean', help="set write mode to clean", action='store_const', const='clean', dest='mode')
+
+    parse_common.add_argument('--prefix', metavar='P', type=str, help='prefix P to filenames', default='article')
 
     subparsers = parser.add_subparsers(help='commands')
 
     # Parser for ls command
     parse_list = subparsers.add_parser('ls', help='list articles in order', parents=[parse_common])
     parse_list.add_argument('-l', '--limit', type=int, metavar='N', help='limit to first N articles', default=max)
-    parse_list.add_argument('out', type=str, metavar='FOLDER', help='extract articles to folder', nargs='?')
     parse_list.add_argument('-d', '--direct', action='store_true', help='filter out redirected articles')
+    parse_list.add_argument('out', type=str, metavar='FOLDER', help='extract articles to folder', nargs='?')
     parse_list.set_defaults(func=cmd_list)
 
     # Parser for find command
     parse_find = subparsers.add_parser('find', help='find a single article by id', parents=[parse_common])
     parse_find.add_argument('id', type=int, metavar='ID', help='article id to search for')
-    parse_find.add_argument('out', type=str, metavar='FILE', help='extract article to file', nargs='?')
+    parse_find.add_argument('out', type=str, metavar='FOLDER', help='extract article to folder', nargs='?')
     parse_find.set_defaults(func=cmd_find)
 
     args = parser.parse_args()
