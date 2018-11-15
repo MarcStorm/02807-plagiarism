@@ -35,17 +35,22 @@ class Wiki():
 
         self.current_block = None
 
-
-    def _init_from_config(self):
+    @property
+    def config(self):
         try:
             import config
+            return config
         except ImportError:
             print("Missing configuration file")
             sys.exit(1)
+
+
+    def _init_from_config(self):
         if self.article_path is None:
-            self.article_path = config.WIKI_ARTICLE_PATH
+            self.article_path = self.config.WIKI_ARTICLE_PATH
         if self.index_path is None:
-            self.index_path = config.WIKI_INDEX_PATH
+            self.index_path = self.config.WIKI_INDEX_PATH
+
 
     def __iter__(self):
         self.index_iter = iter(self.index)
