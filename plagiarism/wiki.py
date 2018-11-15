@@ -2,6 +2,7 @@ import sys
 import os
 import bz2
 from contextlib import contextmanager
+from functools import lru_cache as cache
 import xml.etree.ElementTree as xml
 from xml.dom import minidom
 
@@ -104,13 +105,24 @@ class Article():
             content_xml (bytearray): the content of the article in XML
         """
         self.content = content_xml
-        self.root = xml.fromstring(self.content)
         self.id = int(self.root.find("id").text)
         self.title = str(self.root.find("title").text)
 
 
+    @property
+    @cache(maxsize=1)
+    def root(self):
+        return xml.fromstring(self.content)
+        
+
+    @property
+    def is_redirect(self):
+        return self.root.find("redirect") is not None
+
+
     def __str__(self):
-        return "id: {}, title: {}".format(self.id, self.title)
+        s = "id: {:<6d} title: {:<28s} redirect: {:<b}"
+        return s.format(self.id, self.title, self.is_redirect)
 
 
     def string(self):
@@ -118,7 +130,7 @@ class Article():
 
 
     def text(self):
-        return str(self.root.find("text").text)
+        return str(self.root.find("revision").find("text").text)
 
 
     def pretty(self):
@@ -156,6 +168,7 @@ class Archive():
         """
         self.article_path = article_path
         self.archive = open(self.article_path, 'rb')
+
 
     def get_block(self, start_block, end_block):
         """
