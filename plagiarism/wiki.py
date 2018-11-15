@@ -109,7 +109,8 @@ class WikiArchive():
 class WikiIndex():
     """
     WikiIndex is an iterable object which read indexes from a wikipedia
-    index file in blocks one by one.
+    index file in blocks one by one. Also facilitates binary search in index file 
+    given an article id amongst other utilities related to the index file.
     """
 
     def __init__(self, index_path):
@@ -152,6 +153,106 @@ class WikiIndex():
         return self._get_next_block()
 
 
+    def _get_doc_info(self, line):
+        seek, docid, docname = line.split(":", 2)
+        return int(seek), int(docid), str(docname).strip()
+    
+
+    def _find_block(self, start_seek, seek_amount=128):
+        """
+        Finds all documents in a block. The article index pointed to by start_seek
+        is included in the returned block. Backpaddles from start_seek in increments
+        of seek_amount untill the start of the block is found. On every unsuccessful
+        backpaddle the seek_amount is doubled. All articles in the block is then collected.
+
+        Args:
+            start_seek (int): seek byte in index file
+
+        Note:
+            The start_seek must point to the exact start byte of a line where the article index
+            can be found. Not honering so may produce corrupt results.
+        """
+        with open(self.index_path) as f:
+            f.seek(0, 2)
+            end = f.tell()
+            f.seek(start_seek)
+            next_seek = start_seek
+            orig_seek, _, _ = self._get_doc_info(f.readline())
+            seek = orig_seek
+
+            # Backpaddle to previous block
+            while seek == orig_seek:
+                next_seek -= seek_amount
+                seek_amount *= 2
+                f.seek(max(0, next_seek))
+                if next_seek <= 0:
+                    break
+                f.readline()
+                seek, _, _ = self._get_doc_info(f.readline())
+
+            # Forward to first document in block
+            d = (seek, _, _) = self._get_doc_info(f.readline())
+            while seek != orig_seek:
+                d = (seek, _, _) = self._get_doc_info(f.readline())
+            docs = list()
+
+            # Collect all articles in block
+            while seek == orig_seek:
+                docs.append(d)
+                try:
+                    d = (seek, _, _) = self._get_doc_info(f.readline())
+                except ValueError:
+                    # Except only allowed because of EOF
+                    assert f.tell() == end; break
+            return (orig_seek, seek, docs)
+
+
+    def find_article(self, article_id):
+        """
+        Searches the index file with an article id using binary search in O(log(n)) time.
+        Returns the block in which the article is included.
+
+        Args:
+            article_id (int): the article id being searched for
+
+        Returns:
+            tuple of (start, end, docs)
+            start (int): the byte at which the block starts
+            end (int): the byte at which the block ends
+            docs (list): a list of documents (including the one searched for)
+        """
+        with open(self.index_path) as f:
+            f.seek(0, 2)
+            begin = 0
+            end = f.tell()
+
+            def traverse():
+                f.seek(begin)
+                while f.tell() < end:
+                    before = f.tell()
+                    _, docid, _ = self._get_doc_info(f.readline())
+                    if article_id == docid:
+                        return self._find_block(before)
+                return None
+
+            last = None
+            while begin < end:
+                if last == (begin, end):
+                    return traverse()
+                last = (begin, end)
+                f.seek(begin+(end-begin)//2, 0)
+                f.readline()
+                before = f.tell()
+                _, docid, _ = self._get_doc_info(f.readline())
+                if docid == article_id:
+                    return self._find_block(before)
+                elif article_id > docid:
+                    begin = f.tell()
+                else:
+                    end = f.tell()
+
+
+
     def _get_next_index(self):
         """
         Reads the next line in the index file
@@ -162,8 +263,7 @@ class WikiIndex():
             docid (int): the document id
             docname (str): the name of the document
         """
-        seek, docid, docname = next(self.index).split(":", 2)
-        return int(seek), int(docid), str(docname).strip()
+        return self._get_doc_info(next(self.index))
 
 
     def _get_next_block(self):
