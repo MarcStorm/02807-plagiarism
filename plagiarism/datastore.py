@@ -102,7 +102,7 @@ class PickleDatastore(Datastore):
 class SQLiteDatastore(Datastore):
 
 
-    def __init__(self, db_path):
+    def __init__(self, db_path, force):
         '''
 
         :param db_path:
@@ -112,7 +112,12 @@ class SQLiteDatastore(Datastore):
         self.db = None
 
         if os.path.exists(db_path):
-            self.load_datastore()
+            if force:
+                os.remove(db_path)
+                self.load_datastore()
+                self._create_database()
+            else:
+                self.load_datastore()
         else:
             self.load_datastore()
             self._create_database()
@@ -204,6 +209,7 @@ class SQLiteDatastore(Datastore):
         sql_documents = '''CREATE TABLE documents(
                             id INTEGER NOT NULL,
                             doc_id INTEGER NOT NULL,
+                            PRIMARY KEY (id, doc_id),
                             FOREIGN KEY(id) REFERENCES hashes(id)
                            )'''
         sql_index_hashes = 'CREATE INDEX idx_hashes ON hashes(hash, band)'
