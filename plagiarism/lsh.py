@@ -2,7 +2,7 @@ import mmh3
 from nltk import ngrams
 
 
-class LocalitySensitiveHashing:
+class LSH:
 
     def __init__(self, b=20, r=5, q=7):
         self.sigs = {}
