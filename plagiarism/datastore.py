@@ -1,5 +1,14 @@
+# Imports specific for Pickle
 import pickle
+
+# Imports specific for SQL
+import sqlite3
+from contextlib import contextmanager
+
+# General imports
 import os
+from .util import listhash
+
 
 class Datastore:
 
@@ -92,20 +101,79 @@ class PickleDatastore(Datastore):
 class SQLiteDatastore(Datastore):
 
 
-    def __init__(self):
-        pass
+    def __init__(self, db_path):
+        self.db_path = db_path
+        self.db = None
+
+        if os.path.exists(db_path):
+            self.load_datastore()
+        else:
+            self.load_datastore()
+            self._create_database()
+
+
+    @contextmanager
+    def cursor(self):
+        cursor = self.db.cursor()
+        try:
+            yield cursor
+        finally:
+            self.db.commit()
 
 
     def add_to_matrix(self, doc_id, bands):
-        pass
+
+
+        for i,band in enumerate(bands):
+
+            b = [b.to_bytes(4, 'little', signed=True) for b in band]
+
+            h = listhash(b, 0)
+            self._insert_hash(h, i, doc_id)
 
 
     def find_candidates(self, bands):
         pass
 
 
-    def load_datastore(self, path):
-        pass
+    def load_datastore(self):
+        self.db = sqlite3.connect(self.db_path)
+
+
+    def _close(self):
+        self.db.close()
+
+
+    def _create_database(self):
+
+        sql_hashes = '''CREATE TABLE hashes(
+                            id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                            hash BINARY(4) NOT NULL,
+                            band INTEGER NOT NULL,
+                            CONSTRAINT unq UNIQUE (hash, band)
+                        )'''
+        sql_documents = '''CREATE TABLE documents(
+                            id INTEGER NOT NULL,
+                            doc_id INTEGER NOT NULL,
+                            FOREIGN KEY(id) REFERENCES hashes(id)
+                           )'''
+        sql_index_hashes = 'CREATE INDEX idx_hashes ON hashes(hash, band)'
+        sql_index_documents = 'CREATE INDEX idx_documents ON documents(id)'
+
+        with self.cursor() as c:
+            c.execute(sql_hashes)
+            c.execute(sql_documents)
+            c.execute(sql_index_hashes)
+            c.execute(sql_index_documents)
+
+    def _insert_hash(self, hash, band, doc_id):
+        sql_hashes = '''INSERT OR IGNORE INTO hashes(hash, band) VALUES (?, ?)'''
+        sql_documents = '''INSERT INTO documents(id, doc_id) 
+                            VALUES ((SELECT id FROM hashes WHERE hash = ? AND band = ?), ?)'''
+
+        with self.cursor() as c:
+            c.execute(sql_hashes, (hash, band))
+            c.execute(sql_documents, (hash, band, doc_id))
 
 
 '''

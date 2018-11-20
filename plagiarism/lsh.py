@@ -30,13 +30,13 @@ class LSH:
         '''
         return [min([listhash(s, seed) for s in shingles]) for seed in range(self.k)]
 
-    def signature(self, doc_content):
+    def signature(self, doc):
         '''
 
-        :param doc_content:
+        :param doc:
         :return:
         '''
-        return self.minhash(self.shingle(doc_content))
+        return self.minhash(self.shingle(doc))
 
     def split_list(self, l):
         '''
@@ -55,12 +55,23 @@ class LSH:
         '''
         return [tuple(rows) for rows in self.split_list(signature)]
 
-    def add_document(self, article_id, article):
+    def add_document(self, doc_id, doc):
         '''
 
-        :param article:
-        :return:
+        :param doc_id: identifier of the document.
+        :param doc: document to add to the signature matrix.
+        :return: None
         '''
-        sig = self.signature(article)
+        sig = self.signature(doc)
         bands = self.partition_signature(sig)
-        self.datastore.add_to_matrix(article_id, bands)
+        self.datastore.add_to_matrix(doc_id, bands)
+
+    def find_candidates(self, doc):
+        '''
+
+        :param doc: is the document to find candidates for.
+        :return: a list of candidates.
+        '''
+        sig = self.signature(doc)
+        bands = self.partition_signature(sig)
+        return self.datastore.find_candidates(bands)
