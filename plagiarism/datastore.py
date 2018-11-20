@@ -8,6 +8,7 @@ from contextlib import contextmanager
 # General imports
 import os
 from .util import listhash
+import threading
 
 
 class Datastore:
@@ -106,7 +107,7 @@ class SQLiteDatastore(Datastore):
 
         :param db_path:
         '''
-
+        self.lock = threading.Lock()
         self.db_path = db_path
         self.db = None
 
@@ -123,7 +124,6 @@ class SQLiteDatastore(Datastore):
 
         :return:
         '''
-
         cursor = self.db.cursor()
         try:
             yield cursor

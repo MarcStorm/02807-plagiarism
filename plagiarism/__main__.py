@@ -1,7 +1,9 @@
 from .lsh import LSH
 from .wiki import Wiki
 from .datastore import PickleDatastore, SQLiteDatastore
+import multiprocessing
 from enum import Enum
+import itertools
 import os
 
 
@@ -14,11 +16,13 @@ class Format(Enum):
     PICKLE = 'pickle'
 
 
+def process_article(article):
+    lsh.add_document(article.id, article.clean())
+    return article
+
+
 if __name__ == '__main__':
     import argparse
-
-
-
 
     PATH = os.path.dirname(os.path.abspath(__file__))
     lsh = LSH(None)
@@ -27,12 +31,12 @@ if __name__ == '__main__':
 
     def cmd_gen(args):
 
-        for i, article in enumerate(wiki.items(filter_redirects=True)):
-            if i >= args.limit:
-                break
-            #if not args.quiet:
-                #print('Adding article with ID: {}'.format(article.id))
-            lsh.add_document(article.id, article.clean())
+        pool = multiprocessing.Pool()
+        articles = itertools.islice(wiki.items(filter_redirects=True), args.limit)
+
+        for article in pool.imap_unordered(process_article, articles, 8):
+            if not args.quiet:
+                print('Added article with ID: {}'.format(article.id))
 
 
     def cmd_lookup(args):
