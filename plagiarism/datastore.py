@@ -102,6 +102,11 @@ class SQLiteDatastore(Datastore):
 
 
     def __init__(self, db_path):
+        '''
+
+        :param db_path:
+        '''
+
         self.db_path = db_path
         self.db = None
 
@@ -114,6 +119,11 @@ class SQLiteDatastore(Datastore):
 
     @contextmanager
     def cursor(self):
+        '''
+
+        :return:
+        '''
+
         cursor = self.db.cursor()
         try:
             yield cursor
@@ -122,7 +132,12 @@ class SQLiteDatastore(Datastore):
 
 
     def add_to_matrix(self, doc_id, bands):
+        '''
 
+        :param doc_id:
+        :param bands:
+        :return:
+        '''
 
         for i,band in enumerate(bands):
 
@@ -133,18 +148,52 @@ class SQLiteDatastore(Datastore):
 
 
     def find_candidates(self, bands):
-        pass
+        '''
 
+        :param bands:
+        :return:
+        '''
+
+        c_list = set()
+
+        for i, band in enumerate(bands):
+
+            b = [b.to_bytes(4, 'little', signed=True) for b in band]
+            h = listhash(b, 0)
+
+            sql = '''SELECT doc_id FROM documents NATURAL JOIN hashes
+                        WHERE hashes.hash = ? AND hashes.band = ?'''
+
+            with self.cursor() as c:
+                c.execute(sql, (h, i))
+                rows = c.fetchall()
+                c_list |= set([row[0] for row in rows])
+
+        return list(c_list)
 
     def load_datastore(self):
+        '''
+
+        :return:
+        '''
+
         self.db = sqlite3.connect(self.db_path)
 
 
     def _close(self):
+        '''
+
+        :return:
+        '''
+
         self.db.close()
 
 
     def _create_database(self):
+        '''
+
+        :return:
+        '''
 
         sql_hashes = '''CREATE TABLE hashes(
                             id INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -167,6 +216,14 @@ class SQLiteDatastore(Datastore):
             c.execute(sql_index_documents)
 
     def _insert_hash(self, hash, band, doc_id):
+        '''
+
+        :param hash:
+        :param band:
+        :param doc_id:
+        :return:
+        '''
+
         sql_hashes = '''INSERT OR IGNORE INTO hashes(hash, band) VALUES (?, ?)'''
         sql_documents = '''INSERT INTO documents(id, doc_id) 
                             VALUES ((SELECT id FROM hashes WHERE hash = ? AND band = ?), ?)'''
@@ -174,63 +231,3 @@ class SQLiteDatastore(Datastore):
         with self.cursor() as c:
             c.execute(sql_hashes, (hash, band))
             c.execute(sql_documents, (hash, band, doc_id))
-
-
-'''
-OLD CANDIDATES METHOD
-'''
-'''
-def candidates(self, signature, signature_matrix):
-    # List for candidates.
-    c = list()
-
-    bands = self.partition_signature(signature)
-
-    for i, key in enumerate(bands):
-        c.append(signature_matrix[i].get(key, list()))
-
-    c = [e for l in c for e in l]
-
-    return list(set(c))
-'''
-'''
-OLD SIGNATURE_MATRIX
-'''
-'''
-def signature_matrix(self, signatures):
-    matrix = [dict() for i in range(self.b)]
-
-    for (key, value) in signatures.items():
-        new_value = key
-        for (i, bucket_key) in enumerate(self.partition_signature(value)):
-            # Check if key exists, if not create empty list and append value
-            # otherwise it will get the exsisting list and append value.
-            if bucket_key in matrix[i]:
-                matrix[i][bucket_key].append(new_value)
-            else:
-                matrix[i][bucket_key] = [new_value]
-
-    return matrix
-'''
-'''
-# read data sets
-srcfolder = os.path.dirname(os.path.abspath(__file__))
-data_folder_name = 'ats_corpus_small'
-datafolder = os.path.join(srcfolder, data_folder_name)   # change to ats_corpus for large data set
-outfile = 'sigs_{}.pickle'.format(data_folder_name)
-
-if os.path.exists(outfile):
-	sigs = pickle.load(open(outfile, "rb"))
-else:
-	for file in os.listdir(datafolder):
-		filepath = os.path.join(datafolder, file)
-		f = open(filepath, 'r')
-		docs[file] = f.read()
-		print('read document ' + file)
-		f.close()
-
-	print('Create signatures')
-	sigs = signatures(docs, q, k)
-	with open(outfile, 'wb') as f:
-		pickle.dump(sigs,f)
-'''
