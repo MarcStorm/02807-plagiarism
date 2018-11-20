@@ -7,6 +7,7 @@ from functools import lru_cache as cache
 import xml.etree.ElementTree as xml
 from xml.dom import minidom
 import mwparserfromhell
+import traceback
 
 
 
@@ -57,18 +58,19 @@ class Wiki():
     @property
     def config(self):
         try:
-            import config
-            return config
-        except ImportError:
+            from .config import WIKI_ARTICLE_PATH, WIKI_INDEX_PATH
+            return locals()
+        except ImportError as e:
             print("Missing configuration file")
+            print(traceback.print_exc())
             sys.exit(1)
 
 
     def _init_from_config(self):
         if self.article_path is None:
-            self.article_path = self.config.WIKI_ARTICLE_PATH
+            self.article_path = self.config['WIKI_ARTICLE_PATH']
         if self.index_path is None:
-            self.index_path = self.config.WIKI_INDEX_PATH
+            self.index_path = self.config['WIKI_INDEX_PATH']
 
     
     def items(self, **kwargs):

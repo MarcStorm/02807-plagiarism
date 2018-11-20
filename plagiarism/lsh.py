@@ -1,66 +1,66 @@
-import mmh3
+from .util import listhash
 from nltk import ngrams
 
 
 class LSH:
 
-    def __init__(self, b=20, r=5, q=7):
+    def __init__(self, datastore, b=20, r=5, q=7):
         self.sigs = {}
         self.b = b  # number of bands
         self.r = r  # number of rows
         self.q = q
         self.k = b * r  # number of minhashes
         self.threshold = (1.0 / b) ** (1.0 / r)
-
-    def listhash(self, l, seed):
-        val = 0
-        for e in l:
-            val = val ^ mmh3.hash(e, seed)
-        return val
+        self.datastore = datastore
 
     def shingle(self, s):
+        '''
+
+        :param s:
+        :return:
+        '''
         shingles = ngrams(s.split(), self.q)
         return list(shingles)
 
-    def minhash(self, shingles, k):
-        return [min([self.listhash(s, seed) for s in shingles]) for seed in range(k)]
+    def minhash(self, shingles):
+        '''
 
-    def signature_document(self, doc_content):
-        return self.minhash(self.shingle(self.q, doc_content), self.k)
+        :param shingles:
+        :return:
+        '''
+        return [min([listhash(s, seed) for s in shingles]) for seed in range(self.k)]
 
-    def split_list(self, l, chunks):
-        for i in range(0, len(l), chunks):
-            yield l[i:i + chunks]
+    def signature(self, doc_content):
+        '''
+
+        :param doc_content:
+        :return:
+        '''
+        return self.minhash(self.shingle(doc_content))
+
+    def split_list(self, l):
+        '''
+
+        :param l:
+        :return:
+        '''
+        for i in range(0, len(l), self.r):
+            yield l[i:i + self.r]
 
     def partition_signature(self, signature):
-        return [tuple(rows) for rows in self.split_list(signature, self.r)]
+        '''
 
-    def signature_matrix(self, signatures):
+        :param signature:
+        :return:
+        '''
+        return [tuple(rows) for rows in self.split_list(signature)]
 
-        matrix = [dict() for i in range(self.b)]
+    def add_document(self, article_id, article):
+        '''
 
-        for (key, value) in signatures.items():
-            new_value = key
-            for (i, bucket_key) in enumerate(self.partition_signature(value)):
-                # Check if key exists, if not create empty list and append value
-                # otherwise it will get the exsisting list and append value.
-                if bucket_key in matrix[i]:
-                    matrix[i][bucket_key].append(new_value)
-                else:
-                    matrix[i][bucket_key] = [new_value]
-
-        return matrix
-
-    def candidates(self, signature, signature_matrix):
-
-        # List for candidates.
-        c = list()
-
-        bands = self.partition_signature(signature)
-
-        for i, key in enumerate(bands):
-            c.append(signature_matrix[i].get(key, list()))
-
-        c = [e for l in c for e in l]
-
-        return list(set(c))
+        :param article:
+        :return:
+        '''
+        sig = self.signature(article)
+        bands = self.partition_signature(sig)
+        self.datastore.add_to_matrix(article_id, bands)
