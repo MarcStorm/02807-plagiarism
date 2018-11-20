@@ -16,14 +16,11 @@ class Format(Enum):
     PICKLE = 'pickle'
 
 
-<<<<<<< HEAD
 def process_article(article):
     lsh.add_document(article.id, article.clean())
     return article
 
 
-=======
->>>>>>> 3c41a1f6c95e5fffdac205f04f1fd0e93d0a094c
 if __name__ == '__main__':
     import argparse
 
@@ -34,21 +31,12 @@ if __name__ == '__main__':
 
     def cmd_gen(args):
 
-<<<<<<< HEAD
         pool = multiprocessing.Pool()
         articles = itertools.islice(wiki.items(filter_redirects=True), args.limit)
 
         for article in pool.imap_unordered(process_article, articles, 8):
             if not args.quiet:
                 print('Added article with ID: {}'.format(article.id))
-=======
-        for i, article in enumerate(wiki.items(filter_redirects=True)):
-            if i >= args.limit:
-                break
-            if not args.quiet:
-                print('Adding article with ID: {}'.format(article.id))
-            lsh.add_document(article.id, article.clean())
->>>>>>> 3c41a1f6c95e5fffdac205f04f1fd0e93d0a094c
 
 
     def cmd_lookup(args):

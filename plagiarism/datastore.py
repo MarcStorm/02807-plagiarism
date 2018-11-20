@@ -129,10 +129,12 @@ class SQLiteDatastore(Datastore):
 
         :return:
         '''
+        self.lock.acquire()
         cursor = self.db.cursor()
         try:
             yield cursor
         finally:
+            self.lock.release()
             self.db.commit()
 
 
