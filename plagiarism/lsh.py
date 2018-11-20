@@ -75,3 +75,12 @@ class LSH:
         sig = self.signature(doc)
         bands = self.partition_signature(sig)
         return self.datastore.find_candidates(bands)
+
+
+    def set_datastore(self, datastore):
+        '''
+
+        :param datastore:
+        :return:
+        '''
+        self.datastore = datastore

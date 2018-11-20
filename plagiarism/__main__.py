@@ -1,37 +1,29 @@
 from .lsh import LSH
 from .wiki import Wiki
-from .metrics import jaccard_estimated, jaccard
 from .datastore import PickleDatastore, SQLiteDatastore
+from enum import Enum
 import os
 
 
 
-
-'''
-article = wiki.find_article(12).clean()
-id_list = lsh.find_candidates(article)
-print('Starting candidate loop.')
-for i in id_list:
-    print('Candidate was found with ID: {}'.format(i))
-    set1 = set(article.split(' '))
-    set2 = set(wiki.find_article(i).clean().split(' '))
-    print('Jaccard estimated = {}'.format(jaccard_estimated(set1, set2, len(set1))))
-    print('Jaccard = {}'.format(jaccard(set1, set2)))
-'''
-
-
-
-
+class Format(Enum):
+    """
+    An enumeration of different datastore
+    """
+    SQL = 'sqlite'
+    PICKLE = 'pickle'
 
 
 if __name__ == '__main__':
     import argparse
 
+
+
+
     PATH = os.path.dirname(os.path.abspath(__file__))
-    #datastore = PickleDatastore(os.path.join(PATH, 'resources/lsh/matrix.pickle'))
-    datastore = SQLiteDatastore(os.path.join(PATH, 'resources/lsh/matrix.sqlite'))
-    lsh = LSH(datastore)
+    lsh = LSH(None)
     wiki = Wiki()
+
 
     def cmd_gen(args):
 
@@ -41,8 +33,6 @@ if __name__ == '__main__':
             if not args.quiet:
                 print('Adding article with ID: {}'.format(article.id))
             lsh.add_document(article.id, article.clean())
-
-
 
 
     def cmd_lookup(args):
@@ -69,6 +59,10 @@ if __name__ == '__main__':
     parse_common.add_argument('-q', '--quiet', action='store_true',
                               help='omit output to stdout')
 
+    datastore_group = parse_common.add_mutually_exclusive_group()
+    datastore_group.add_argument('-Q', '--sqlite', help='set datastore to SQLite v3', action='store_const', const=Format.SQL, dest='datastore')
+    datastore_group.add_argument('-P', '--pickle', help='set datastore to Pickle', action='store_const', const=Format.PICKLE, dest='datastore')
+
     subparsers = parser.add_subparsers(help='commands')
 
     # Parser for gen command
@@ -84,6 +78,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if 'func' in args:
+
+        datastore = None
+
+        if args.datastore == Format.SQL:
+            datastore = SQLiteDatastore(os.path.join(PATH, 'resources/lsh/matrix.sqlite'))
+        elif args.datastore == Format.PICKLE:
+            datastore = PickleDatastore(os.path.join(PATH, 'resources/lsh/matrix.pickle'))
+        else:
+            raise ValueError('Format {} is not a valid datastore'.format(args.datastore))
+
+        lsh.set_datastore(datastore)
         args.func(args)
     else:
         parser.print_help()
