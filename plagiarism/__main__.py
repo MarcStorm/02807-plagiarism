@@ -30,8 +30,8 @@ if __name__ == '__main__':
         for i, article in enumerate(wiki.items(filter_redirects=True)):
             if i >= args.limit:
                 break
-            if not args.quiet:
-                print('Adding article with ID: {}'.format(article.id))
+            #if not args.quiet:
+                #print('Adding article with ID: {}'.format(article.id))
             lsh.add_document(article.id, article.clean())
 
 

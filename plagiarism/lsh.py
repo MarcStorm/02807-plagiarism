@@ -15,34 +15,37 @@ class LSH:
 
     def shingle(self, s):
         '''
+        Shingle will split a text into groups of size q in a list.
 
-        :param s:
-        :return:
+        :param s: string to split in singles
+        :return: list of shingles
         '''
         shingles = ngrams(s.split(), self.q)
         return list(shingles)
 
     def minhash(self, shingles):
         '''
+        Minhas computes a list of the minimum hash values for each shingle.
 
-        :param shingles:
-        :return:
+        :param shingles: list of shingles
+        :return: list of minimum hash values, one for each shingle
         '''
         return [min([listhash(s, seed) for s in shingles]) for seed in range(self.k)]
 
     def signature(self, doc):
         '''
 
-        :param doc:
-        :return:
+        :param doc: document to create a signature for.
+        :return: list of minimum has values, being the signature.
         '''
         return self.minhash(self.shingle(doc))
 
     def split_list(self, l):
         '''
+        split list will split a list into chunks of r rows.
 
-        :param l:
-        :return:
+        :param l: list to split.
+        :return: generator.
         '''
         for i in range(0, len(l), self.r):
             yield l[i:i + self.r]
@@ -50,8 +53,8 @@ class LSH:
     def partition_signature(self, signature):
         '''
 
-        :param signature:
-        :return:
+        :param signature: signature to partition.
+        :return: a list of tuples, where each tuple is a partition of hash values.
         '''
         return [tuple(rows) for rows in self.split_list(signature)]
 
