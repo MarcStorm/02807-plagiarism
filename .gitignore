@@ -361,7 +361,7 @@ litterature/
 config.py
 
 # Ignore SQLite database files in resources folder
-resources/*.sqlite
+*.sqlite
 
 # Ignore Pickle files in resources folder
-resources/*.pickle
+*.pickle
