@@ -359,3 +359,9 @@ litterature/
 
 # Ignore developer sensitive config file (use config.example.py)
 config.py
+
+# Ignore SQLite database files in resources folder
+resources/*.sqlite
+
+# Ignore Pickle files in resources folder
+resources/*.pickle
