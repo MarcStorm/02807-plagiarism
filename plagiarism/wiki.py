@@ -239,6 +239,8 @@ class Article():
             Format.TEXT: "txt",
             Format.CLEAN: "txt",
         }
+        if not os.path.exists(args.out):
+            os.mkdir(args.out)
         name = "{}_{}.{}".format(prefix, self.id, extensions[fmt])
         with open(os.path.join(folder, name), 'wb') as f:
             if fmt == Format.XML:
@@ -503,9 +505,6 @@ if __name__ == '__main__':
     wiki = Wiki()
 
     def cmd_list(args):
-        if args.out is not None:
-            if not os.path.exists(args.out):
-                os.mkdir(args.out)
         items = wiki.items(filter_redirects=args.direct)
         for i, article in enumerate(items):
             if i >= args.limit:
