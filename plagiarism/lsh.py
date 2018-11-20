@@ -1,5 +1,6 @@
 from .util import listhash
 from nltk import ngrams
+import mmh3
 
 
 class LSH:
@@ -30,7 +31,12 @@ class LSH:
         :param shingles: list of shingles
         :return: list of minimum hash values, one for each shingle
         '''
-        return [min([listhash(s, seed) for s in shingles]) for seed in range(self.k)]
+        minhashes = list()
+        hashes = [listhash(s, 0) for s in shingles]
+        for i in range(self.k):
+            minhashes.append(min(hashes))
+            hashes = [mmh3.hash(e.to_bytes(4, 'little', signed=True), i+1) for e in hashes]
+        return minhashes
 
     def signature(self, doc):
         '''
