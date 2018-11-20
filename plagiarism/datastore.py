@@ -204,6 +204,7 @@ class SQLiteDatastore(Datastore):
         sql_documents = '''CREATE TABLE documents(
                             id INTEGER NOT NULL,
                             doc_id INTEGER NOT NULL,
+                            PRIMARY KEY (id, doc_id),
                             FOREIGN KEY(id) REFERENCES hashes(id)
                            )'''
         sql_index_hashes = 'CREATE INDEX idx_hashes ON hashes(hash, band)'
