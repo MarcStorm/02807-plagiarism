@@ -17,9 +17,6 @@ class Format(Enum):
 if __name__ == '__main__':
     import argparse
 
-
-
-
     PATH = os.path.dirname(os.path.abspath(__file__))
     lsh = LSH(None)
     wiki = Wiki()
@@ -66,9 +63,10 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(help='commands')
 
     # Parser for gen command
-    parse_list = subparsers.add_parser('gen', help='generate signature matrix for documents', parents=[parse_common])
-    parse_list.add_argument('-l', '--limit', type=int, metavar='N', help='limit to first N documents', default=max)
-    parse_list.set_defaults(func=cmd_gen)
+    parse_gen = subparsers.add_parser('gen', help='generate signature matrix for documents', parents=[parse_common])
+    parse_gen.add_argument('-l', '--limit', type=int, metavar='N', help='limit to first N documents', default=max)
+    parse_gen.add_argument('-f', '--force', action='store_true', help='overwrite existing SQLite database')
+    parse_gen.set_defaults(func=cmd_gen)
 
     # Parser for find command
     parse_find = subparsers.add_parser('lookup', help='find candidates for a single document', parents=[parse_common])
@@ -82,7 +80,7 @@ if __name__ == '__main__':
         datastore = None
 
         if args.datastore == Format.SQL:
-            datastore = SQLiteDatastore(os.path.join(PATH, 'resources/lsh/matrix.sqlite'))
+            datastore = SQLiteDatastore(os.path.join(PATH, 'resources/lsh/matrix.sqlite'), args.force)
         elif args.datastore == Format.PICKLE:
             datastore = PickleDatastore(os.path.join(PATH, 'resources/lsh/matrix.pickle'))
         else:
