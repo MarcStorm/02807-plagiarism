@@ -23,7 +23,7 @@ class Format(Enum):
 
 class Wiki():
     """
-    Wiki is an object which reads articles from a compressed muiltistream 
+    Wiki is an object which reads articles from a compressed muiltistream
     dump of wikipedia and decompresses articles.
 
     Summary:
@@ -72,7 +72,7 @@ class Wiki():
         if self.index_path is None:
             self.index_path = self.config['WIKI_INDEX_PATH']
 
-    
+
     def items(self, **kwargs):
         """
         Returns an iterator for the articles in the wiki
@@ -178,7 +178,7 @@ class Article():
     @cache(maxsize=1)
     def root(self):
         return xml.fromstring(self.content)
-        
+
 
     @property
     def is_redirect(self):
@@ -203,7 +203,7 @@ class Article():
         """
         return str(self.root.find("revision").find("text").text)
 
-    
+
     def clean(self):
         """
         Cleans the markup and returns a text-only version of
@@ -231,7 +231,7 @@ class Article():
         with open(file_path, 'wb') as f:
             f.write(self.content)
 
-    
+
     def export(self, fmt=Format.XML, folder='./out', prefix='article'):
         """
         Exports the article into another format and writes it to a file
@@ -304,7 +304,7 @@ class Archive():
 class Index():
     """
     Index is an iterable object which read indexes from a wikipedia
-    index file in blocks one by one. Also facilitates binary search in index file 
+    index file in blocks one by one. Also facilitates binary search in index file
     given an article id amongst other utilities related to the index file.
     """
 
@@ -342,7 +342,7 @@ class Index():
     def __iter__(self):
         return self
 
-    
+
     def __next__(self):
         """
         Returns the next block of indexes
@@ -359,7 +359,7 @@ class Index():
     def _get_doc_info(self, line):
         seek, docid, docname = line.split(":", 2)
         return int(seek), int(docid), str(docname).strip()
-    
+
 
     def _find_block(self, start_seek, seek_amount=128):
         """
@@ -515,7 +515,7 @@ if __name__ == '__main__':
                 print(article)
             if args.out is not None:
                 article.export(folder=args.out, prefix=args.prefix, fmt=Format(args.mode))
-                
+
 
     def cmd_find(args):
         article = wiki.find_article(args.id)
@@ -532,7 +532,7 @@ if __name__ == '__main__':
 
     # Common parser (common flags, used for inheritance)
     parse_common = argparse.ArgumentParser(add_help=False)
-    parse_common.add_argument('-q', '--quiet', action='store_true', 
+    parse_common.add_argument('-q', '--quiet', action='store_true',
         help='omit output to stdout')
 
     mode_group = parse_common.add_mutually_exclusive_group()
@@ -563,4 +563,3 @@ if __name__ == '__main__':
         args.func(args)
     else:
         parser.print_help()
-

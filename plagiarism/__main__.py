@@ -17,7 +17,15 @@ class Format(Enum):
 
 
 def process_article(article):
-    lsh.add_document(article.id, article.clean())
+
+    min_len = 250
+
+    clean_article = article.clean()
+
+    if len(clean_article) < min_len:
+        return None
+
+    lsh.add_document(article.id, clean_article)
     return article
 
 
@@ -35,7 +43,7 @@ if __name__ == '__main__':
         articles = itertools.islice(wiki.items(filter_redirects=True), args.limit)
 
         for article in pool.imap_unordered(process_article, articles, 8):
-            if not args.quiet:
+            if not args.quiet and article is not None:
                 print('Added article with ID: {}'.format(article.id))
 
 
