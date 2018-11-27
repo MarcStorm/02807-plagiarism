@@ -5,7 +5,7 @@ import mmh3
 
 class LSH:
 
-    def __init__(self, datastore, b=20, r=5, q=7):
+    def __init__(self, datastore, b=20, r=5, q=9):
         self.sigs = {}
         self.b = b  # number of bands
         self.r = r  # number of rows
