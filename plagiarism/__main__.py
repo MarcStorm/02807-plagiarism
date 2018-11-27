@@ -25,7 +25,7 @@ def process_article(article):
     if len(clean_article) < min_len:
         return None
 
-    lsh.add_document(article.id, clean_article)
+    args.lsh.add_document(article.id, clean_article)
     return article
 
 
@@ -33,18 +33,22 @@ if __name__ == '__main__':
     import argparse
 
     PATH = os.path.dirname(os.path.abspath(__file__))
-    lsh = LSH(None)
     wiki = Wiki()
 
 
     def cmd_gen(args):
 
-        pool = multiprocessing.Pool()
         articles = itertools.islice(wiki.items(filter_redirects=True), args.limit)
 
-        for article in pool.imap_unordered(process_article, articles, 8):
-            if not args.quiet and article is not None:
-                print('Added article with ID: {}'.format(article.id))
+        if args.parallel:
+            pool = multiprocessing.Pool()
+            for article in pool.imap_unordered(process_article, articles, 8):
+                if not args.quiet and article is not None:
+                    pass
+        else:
+            for article in articles:
+                if not args.quiet and article is not None:
+                    process_article(article)
 
 
     def cmd_lookup(args):
@@ -58,7 +62,7 @@ if __name__ == '__main__':
             with open(args.path, 'r') as f:
                 content = f.read().decode('utf-8')
 
-        c_list = lsh.find_candidates(content)
+        c_list = args.lsh.find_candidates(content)
         print(c_list)
 
     # Main parser
@@ -68,8 +72,7 @@ if __name__ == '__main__':
 
     # Common parser (common flags, used for inheritance)
     parse_common = argparse.ArgumentParser(add_help=False)
-    parse_common.add_argument('-q', '--quiet', action='store_true',
-                              help='omit output to stdout')
+    parse_common.add_argument('-q', '--quiet', action='store_true', help='omit output to stdout')
 
     datastore_group = parse_common.add_mutually_exclusive_group()
     datastore_group.add_argument('-Q', '--sqlite', help='set datastore to SQLite v3', action='store_const', const=Format.SQL, dest='datastore')
@@ -81,6 +84,7 @@ if __name__ == '__main__':
     parse_gen = subparsers.add_parser('gen', help='generate signature matrix for documents', parents=[parse_common])
     parse_gen.add_argument('-l', '--limit', type=int, metavar='N', help='limit to first N documents', default=max)
     parse_gen.add_argument('-f', '--force', action='store_true', help='overwrite existing SQLite database')
+    parse_gen.add_argument('-p', '--parallel', action='store_true', help='generating signature matrix in parallel')
     parse_gen.set_defaults(func=cmd_gen)
 
     # Parser for find command
@@ -93,7 +97,6 @@ if __name__ == '__main__':
     if 'func' in args:
 
         datastore = None
-
         if args.datastore == Format.SQL:
             datastore = SQLiteDatastore(os.path.join(PATH, 'resources/lsh/matrix.sqlite'), args.force)
         elif args.datastore == Format.PICKLE:
@@ -101,7 +104,7 @@ if __name__ == '__main__':
         else:
             raise ValueError('Format {} is not a valid datastore'.format(args.datastore))
 
-        lsh.set_datastore(datastore)
+        args.lsh = LSH(datastore=datastore, verbose=not args.quiet)
         args.func(args)
     else:
         parser.print_help()
