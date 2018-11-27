@@ -84,7 +84,7 @@ if __name__ == '__main__':
     parse_gen = subparsers.add_parser('gen', help='generate signature matrix for documents', parents=[parse_common])
     parse_gen.add_argument('-l', '--limit', type=int, metavar='N', help='limit to first N documents', default=max)
     parse_gen.add_argument('-f', '--force', action='store_true', help='overwrite existing SQLite database')
-    parse_gen.add_argument('-p', '--parallel', action='store_true', help='generating signaturematrix in parallel')
+    parse_gen.add_argument('-p', '--parallel', action='store_true', help='generating signature matrix in parallel')
     parse_gen.set_defaults(func=cmd_gen)
 
     # Parser for find command
