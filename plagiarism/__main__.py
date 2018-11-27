@@ -25,7 +25,7 @@ def process_article(article):
     if len(clean_article) < min_len:
         return None
 
-    lsh.add_document(article.id, clean_article)
+    args.lsh.add_document(article.id, clean_article)
     return article
 
 
@@ -33,7 +33,6 @@ if __name__ == '__main__':
     import argparse
 
     PATH = os.path.dirname(os.path.abspath(__file__))
-    lsh = LSH(None)
     wiki = Wiki()
 
 
@@ -45,12 +44,11 @@ if __name__ == '__main__':
             pool = multiprocessing.Pool()
             for article in pool.imap_unordered(process_article, articles, 8):
                 if not args.quiet and article is not None:
-                    print('Added article with ID: {}'.format(article.id))
+                    pass
         else:
             for article in articles:
                 if not args.quiet and article is not None:
                     process_article(article)
-                    print('Added article with ID: {}'.format(article.id))
 
 
     def cmd_lookup(args):
@@ -64,7 +62,7 @@ if __name__ == '__main__':
             with open(args.path, 'r') as f:
                 content = f.read().decode('utf-8')
 
-        c_list = lsh.find_candidates(content)
+        c_list = args.lsh.find_candidates(content)
         print(c_list)
 
     # Main parser
@@ -99,7 +97,6 @@ if __name__ == '__main__':
     if 'func' in args:
 
         datastore = None
-
         if args.datastore == Format.SQL:
             datastore = SQLiteDatastore(os.path.join(PATH, 'resources/lsh/matrix.sqlite'), args.force)
         elif args.datastore == Format.PICKLE:
@@ -107,7 +104,7 @@ if __name__ == '__main__':
         else:
             raise ValueError('Format {} is not a valid datastore'.format(args.datastore))
 
-        lsh.set_datastore(datastore)
+        args.lsh = LSH(datastore=datastore, verbose=not args.quiet)
         args.func(args)
     else:
         parser.print_help()

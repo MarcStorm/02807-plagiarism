@@ -1,11 +1,12 @@
 from .util import listhash
 from nltk import ngrams
 import mmh3
+import threading
 
 
 class LSH:
 
-    def __init__(self, datastore, b=20, r=5, q=9):
+    def __init__(self, datastore, b=20, r=5, q=9, verbose=False):
         self.sigs = {}
         self.b = b  # number of bands
         self.r = r  # number of rows
@@ -13,6 +14,9 @@ class LSH:
         self.k = b * r  # number of minhashes
         self.threshold = (1.0 / b) ** (1.0 / r)
         self.datastore = datastore
+        self.verbose = verbose
+        self.article_counter = 0
+        self.lock = threading.Lock()
 
     def shingle(self, s):
         '''
@@ -71,9 +75,17 @@ class LSH:
         :param doc: document to add to the signature matrix.
         :return: None
         '''
+        self.lock.acquire()
+
         sig = self.signature(doc)
         bands = self.partition_signature(sig)
         self.datastore.add_to_matrix(doc_id, bands)
+
+        self.article_counter += 1
+        if self.verbose:
+            print('Added article with ID: {} \t Total number of articles added: {}'.format(doc_id, self.article_counter))
+
+        self.lock.release()
 
     def find_candidates(self, doc):
         '''
