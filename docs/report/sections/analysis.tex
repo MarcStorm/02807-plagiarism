@@ -1,0 +1,26 @@
+\section{Analysis}
+% Revised project plan in bullet form.
+% Tools used to solve the problem
+
+Below are the requirements of the solution to detect plagiarism of documents and paragraphs listed in order.
+
+%Ordered list
+\begin{enumerate}
+    \item Parser to read articles from Wikipedia's database
+    \item Transform relevant data from articles to perform a plagiarism comparison on a query document
+    \item Storage solution of the transformed data
+    \item Given a query document, find similar documents
+    % NOTE: The points below should be removed if not implemented.
+    \item Extend information stored to be for parts of a document, i.e. a paragraph or a number of sentences
+    \item Increase performance for large documents with massively parallel computation
+\end{enumerate}
+
+The first item on the list above allows the solution to parse a number of articles from the Wikipedia database. As the focus is on detecting plagiarism in text, should the parser only parse the cleaned text of the articles. Furthermore should the parser allow to use the solution on a subset of the articles from the database. The second item should use \emph{Locality-Sensitive Hashing}, (\emph{LSH}), to represent the content of the articles, in a more compact and efficient way. The third item should extend the solution with a \emph{SQLite} database to allow for the results of LSH for a large number of articles to be stored and be used for future queries furthermore avoiding to preprocess the Wikipedia database more than once. The forth item should add allow the user of the solution to query the solution with a document or paragraph and find the IDs of documents that are considered to be similar, using a similarity metric like the \emph{Jaccard similarity coefficient}. The fifth item should add functionality to split a document into smaller pieces, to allow the solution to detect plagiarism on paragraphs or a number of sentences rather than entire documents. Finally to speed of the processing of large documents that are split into multiple pieces, should \emph{MapReduce} be added to allow for massively parallel computation.
+
+\subsection{Terminology}
+\begin{tabular}{cp{0.6\textwidth}}
+  $u$ & total number of Wikipedia articles (size of universe) \\
+  $n$ & number of parsed articles in LSH (subset of $u$) \\
+  $r$ & number of rows in the LSH datastructure \\
+  $b$ & number of bands in the LSH datastructure
+\end{tabular}

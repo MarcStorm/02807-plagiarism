@@ -1,1 +1,12 @@
 \section{Discussion}
+% Argue why you have chosen this solution over other solutions
+% What is good about your solution/what could be improved
+
+
+\paragraph{Database}
+% Mention limitations of SQLite, i.e. crash when many threads working on it.
+% Lookup in a database is slower than having datastructure in RAM.
+We have made the choice of using a database instead of storing the LSH datastructure in memory which has some trade-offs. Accessing data from disk will be much slower than accessing it from memory and thus will decrease lookup times. Asymptotically however there is no difference because we still have to perform $b$ lookups, one for each band. The performance decrease can be tolerated since the lookup time is not significantly important to the speed of the algorithm as a whole, and in practice only accounts for a small fraction of the total execution time. In fact, generating shingles and computing minhashes is the single most intensive task of finding candidates.
+
+
+% Future work / what could be improved
