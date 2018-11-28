@@ -15,7 +15,8 @@ Another much needed functionality is fast lookup of articles. This is desirable 
 %Normally will the LSH algorithm hash the words of the shingles of a document $k$ times with a different seed value combining the hash values of each shingle with an XOR\footnote{\url{https://en.wikipedia.org/wiki/XOR_gate}} operation to a single hash value, to create $k$ different hash values, that will be the signature of a document. This means that each word in every shingle is hashed $k$ times. A way to improve this, which is implemented in the solution, is by hashing the words in each shingle once, thereby generating one hash value for each shingle. This hash value is then hashed $k$ times with a different seed to generate $k$ different hash values.
 
 % Argue for the choice of parameters like q, r, b, k....
-The size of the shingles, $q$, has been chosen to $q=9$ as it is considered safe for large documents.\cite{leskovec2014mining}
+The LSH algorithm has a few different parameters, that should be set according to what you wish to achieve. One of them is the size of the shingles, $q$. For the matching of whole documents $q = 9$, as it is considered safe for large documents.\cite{leskovec2014mining}. % Write something about the value of q for matching paragraphs
+The remaining two parameters are $b$ and $r$, which is the number of bands and the number of rows in each band respectively. Chosing these parameters, will change the probability of the signatures in our datastructure of becoming a candidate. With $b=20$ and $r=5$ we get the following curve as seen in figure~\ref{fig:lsh}. This gives us that when the similarity of two documents are $0.51$, then the probability of becoming a candidate is $>1/2$.
 
 \begin{figure}[h]
 	\centering
