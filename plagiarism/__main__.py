@@ -59,7 +59,7 @@ if __name__ == '__main__':
             content = wiki.find_article(int(args.path)).clean()
 
         except ValueError:
-            with open(args.path, 'r') as f:
+            with open(args.path, 'rb') as f:
                 content = f.read().decode('utf-8')
 
         c_list = args.lsh.find_candidates(content)
@@ -73,6 +73,7 @@ if __name__ == '__main__':
     # Common parser (common flags, used for inheritance)
     parse_common = argparse.ArgumentParser(add_help=False)
     parse_common.add_argument('-q', '--quiet', action='store_true', help='omit output to stdout')
+    parse_common.add_argument('-s', '--split', action='store_true', help='split each document into paragraphs')
 
     datastore_group = parse_common.add_mutually_exclusive_group()
     datastore_group.add_argument('-Q', '--sqlite', help='set datastore to SQLite v3', action='store_const', const=Format.SQL, dest='datastore')
@@ -96,15 +97,18 @@ if __name__ == '__main__':
 
     if 'func' in args:
 
+        force = args.force if 'force' in args else False
+        split = args.split if 'split' in args else False
+
         datastore = None
         if args.datastore == Format.SQL:
-            datastore = SQLiteDatastore(os.path.join(PATH, 'resources/lsh/matrix.sqlite'), args.force)
+            datastore = SQLiteDatastore(os.path.join(PATH, 'resources/lsh/matrix.sqlite'), force)
         elif args.datastore == Format.PICKLE:
             datastore = PickleDatastore(os.path.join(PATH, 'resources/lsh/matrix.pickle'))
         else:
             raise ValueError('Format {} is not a valid datastore'.format(args.datastore))
 
-        args.lsh = LSH(datastore=datastore, verbose=not args.quiet)
+        args.lsh = LSH(datastore=datastore, verbose=not args.quiet, paragraphs=split)
         args.func(args)
     else:
         parser.print_help()

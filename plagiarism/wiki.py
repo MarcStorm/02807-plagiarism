@@ -1,7 +1,6 @@
 import sys
 import os
 import bz2
-import re
 from enum import Enum
 from contextlib import contextmanager
 from functools import lru_cache as cache
@@ -211,9 +210,8 @@ class Article():
         the article without any markup, links, html etc.
         """
         code = mwparserfromhell.parse(self.text())
-        code = code.strip_code(normalize=True, collapse=True)
-        code = re.sub('\s+', ' ', code).strip()
-        return code
+        return code.strip_code(normalize=True, collapse=True)
+
 
     def pretty(self):
         """

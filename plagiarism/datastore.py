@@ -233,7 +233,7 @@ class SQLiteDatastore(Datastore):
         '''
 
         sql_hashes = '''INSERT OR IGNORE INTO hashes(hash, band) VALUES (?, ?)'''
-        sql_documents = '''INSERT INTO documents(id, doc_id) 
+        sql_documents = '''INSERT OR IGNORE INTO documents(id, doc_id) 
                             VALUES ((SELECT id FROM hashes WHERE hash = ? AND band = ?), ?)'''
 
         with self.cursor() as c:
