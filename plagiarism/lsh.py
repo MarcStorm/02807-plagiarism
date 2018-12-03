@@ -1,5 +1,8 @@
 from .util import listhash, split_document
 from nltk import ngrams
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import nltk
 import mmh3
 import threading
 import re
@@ -21,10 +24,22 @@ class LSH:
         self.paragraphs = paragraphs
         self.lock = threading.Lock()
 
+        # Download necessary resources
+        nltk.download('punkt')
+        nltk.download('stopwords')
+
 
     def clean_document(self, doc):
         doc = re.sub(r'[^a-zA-Z0-9\s]+', '', doc)
         doc = re.sub(r'\s+', ' ', doc).strip()
+        doc = doc.lower()
+        
+        # Remove stop words
+        stop_words = set(stopwords.words('english'))
+        doc_tokens = word_tokenize(doc)
+        doc = [w for w in doc_tokens if w not in stop_words]
+        doc = ' '.join(doc)
+
         return doc
 
 
