@@ -18,6 +18,7 @@ class GeneratorMapReducer(MRJob):
         super().__init__(*args, **kwargs)
         self.remaining = str()
 
+
     def steps(self):
         return [
             MRStep(
@@ -27,8 +28,10 @@ class GeneratorMapReducer(MRJob):
             MRStep(
                 mapper=self.mapper_datastore,
                 reducer=self.reducer_datastore,
+                reducer_final=self.reducer_datastore_final,
             ),
         ]
+
 
     def mapper_articles(self, article_id, article):
         article = lsh.clean_document(article)
@@ -55,6 +58,11 @@ class GeneratorMapReducer(MRJob):
         for item in items:
             (article_id, bands) = item
             lsh.datastore.add_to_matrix(article_id, bands)
+
+
+    def reducer_datastore_final(self):
+        yield 'done', None
+
 
 
 if __name__ == '__main__':
