@@ -1,4 +1,4 @@
-from .util import listhash, split_document
+from util import listhash, split_document
 from nltk import ngrams
 import mmh3
 import threading
@@ -182,6 +182,7 @@ class LSH:
                 pass
         
         return list(candidates)
+
 
 
     def set_datastore(self, datastore):

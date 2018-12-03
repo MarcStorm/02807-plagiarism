@@ -7,7 +7,7 @@ from contextlib import contextmanager
 
 # General imports
 import os
-from .util import listhash
+from util import listhash
 import threading
 
 

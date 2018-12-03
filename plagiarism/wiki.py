@@ -58,9 +58,9 @@ class Wiki():
     @property
     def config(self):
         try:
-            from .config import WIKI_ARTICLE_PATH, WIKI_INDEX_PATH
+            from config import WIKI_ARTICLE_PATH, WIKI_INDEX_PATH
             return locals()
-        except ImportError as e:
+        except ImportError:
             print("Missing configuration file")
             print(traceback.print_exc())
             sys.exit(1)
@@ -513,8 +513,10 @@ if __name__ == '__main__':
                 break
             if not args.quiet:
                 print(article)
-            if args.out is not None:
-                article.export(folder=args.out, prefix=args.prefix, fmt=Format(args.mode))
+            if args.mode == 'stdout':
+                    print("{}\t{}".format(article.id, article.clean()))
+            elif args.out is not None:
+                    article.export(folder=args.out, prefix=args.prefix, fmt=Format(args.mode))
 
 
     def cmd_find(args):
@@ -539,6 +541,7 @@ if __name__ == '__main__':
     mode_group.add_argument('-X', '--xml', help="set write mode to xml", action='store_const', const='xml', dest='mode')
     mode_group.add_argument('-T', '--txt', help="set write mode to text", action='store_const', const='text', dest='mode')
     mode_group.add_argument('-C', '--clean', help="set write mode to clean", action='store_const', const='clean', dest='mode')
+    mode_group.add_argument('-O', '--stdout', help="set write mode to stdout", action='store_const', const='stdout', dest='mode')
 
     parse_common.add_argument('--prefix', metavar='P', type=str, help='prefix P to filenames', default='article')
 
