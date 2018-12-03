@@ -9,7 +9,7 @@ SPACE = u' '
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
-from lsh import LSH
+from lsh import LSH, DocumentTooShortError
 datastore = SQLiteDatastore(config.SQLITE_PATH, False)
 lsh = LSH(datastore)
 
@@ -47,7 +47,10 @@ class CandidatesMapReducer(MRJob):
     def reducer_minhash(self, _, paras):
         candidates = set()
         for p in paras:
-            candidates |= set(lsh._find_candidates(p))
+            try:
+                candidates |= set(lsh._find_candidates(p))
+            except DocumentTooShortError:
+                pass
         yield None, list(candidates)
 
     
