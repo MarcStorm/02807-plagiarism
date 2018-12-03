@@ -1,6 +1,7 @@
 import sys
 import os
 import bz2
+import util
 from enum import Enum
 from contextlib import contextmanager
 from functools import lru_cache as cache
@@ -511,12 +512,12 @@ if __name__ == '__main__':
         for i, article in enumerate(items):
             if i >= args.limit:
                 break
-            if not args.quiet:
-                print(article)
             if args.mode == 'stdout':
-                    print("{}\t{}".format(article.id, article.clean()))
+                print("{}\t{}".format(article.id, util.clean_document(article.clean())))
             elif args.out is not None:
-                    article.export(folder=args.out, prefix=args.prefix, fmt=Format(args.mode))
+                if not args.quiet:
+                    print(article)
+                article.export(folder=args.out, prefix=args.prefix, fmt=Format(args.mode))
 
 
     def cmd_find(args):
@@ -534,8 +535,7 @@ if __name__ == '__main__':
 
     # Common parser (common flags, used for inheritance)
     parse_common = argparse.ArgumentParser(add_help=False)
-    parse_common.add_argument('-q', '--quiet', action='store_true',
-        help='omit output to stdout')
+    parse_common.add_argument('-q', '--quiet', action='store_true', help='omit output to stdout')
 
     mode_group = parse_common.add_mutually_exclusive_group()
     mode_group.add_argument('-X', '--xml', help="set write mode to xml", action='store_const', const='xml', dest='mode')

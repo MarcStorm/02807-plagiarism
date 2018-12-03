@@ -5,8 +5,8 @@ import util
 import os
 from datastore import SQLiteDatastore
 import config
+from lsh import LSH, DocumentTooShortError
 
-from lsh import LSH
 datastore = SQLiteDatastore(config.SQLITE_PATH, False)
 lsh = LSH(datastore, paragraphs=True)
 
@@ -38,18 +38,23 @@ class GeneratorMapReducer(MRJob):
 
 
     def reducer_minhash(self, article_id, para):
-        sig = lsh.signature(para)
-        bands = lsh.partition_signature(sig)
-        yield article_id, bands
+        for p in para:
+            try:
+                sig = lsh.signature(p)
+                bands = lsh.partition_signature(sig)
+                yield article_id, bands
+            except DocumentTooShortError:
+                pass
 
 
     def mapper_datastore(self, article_id, bands):
         yield None, (article_id, bands)
     
     
-    def reducer_datastore(self, _, item):
-        (article_id, bands) = item
-        lsh.datastore.add_to_matrix(article_id, bands)
+    def reducer_datastore(self, _, items):
+        for item in items:
+            (article_id, bands) = item
+            lsh.datastore.add_to_matrix(article_id, bands)
 
 
 if __name__ == '__main__':

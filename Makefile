@@ -1,0 +1,2 @@
+setup:
+	python setup.py

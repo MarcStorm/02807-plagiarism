@@ -24,10 +24,6 @@ class LSH:
         self.paragraphs = paragraphs
         self.lock = threading.Lock()
 
-        # Download necessary resources
-        nltk.download('punkt')
-        nltk.download('stopwords')
-
 
     def clean_document(self, doc):
         doc = re.sub(r'[^a-zA-Z0-9\s]+', '', doc)
