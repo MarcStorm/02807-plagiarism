@@ -24,10 +24,7 @@ class GeneratorMapReducer(MRJob):
             MRStep(
                 mapper=self.mapper_articles,
                 reducer=self.reducer_minhash,
-            ),
-            MRStep(
-                reducer=self.reducer_counter,
-            ),
+            )
         ]
 
 
@@ -45,13 +42,8 @@ class GeneratorMapReducer(MRJob):
                 lsh.datastore.add_to_matrix(article_id, bands)
             except DocumentTooShortError:
                 pass
-        yield 'articles', 1
+        yield 'article', article_id
     
-    
-    def reducer_counter(self, key, items):
-        yield key, sum(items)
-
-
 
 
 if __name__ == '__main__':
