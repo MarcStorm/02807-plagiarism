@@ -26,9 +26,7 @@ class GeneratorMapReducer(MRJob):
                 reducer=self.reducer_minhash,
             ),
             MRStep(
-                mapper=self.mapper_datastore,
-                reducer=self.reducer_datastore,
-                reducer_final=self.reducer_datastore_final,
+                reducer=self.reducer_counter,
             ),
         ]
 
@@ -44,23 +42,15 @@ class GeneratorMapReducer(MRJob):
             try:
                 sig = lsh.signature(p)
                 bands = lsh.partition_signature(sig)
-                yield article_id, bands
+                lsh.datastore.add_to_matrix(article_id, bands)
             except DocumentTooShortError:
                 pass
-
-
-    def mapper_datastore(self, article_id, bands):
-        yield None, (article_id, bands)
+        yield 'articles', 1
     
     
-    def reducer_datastore(self, _, items):
-        for item in items:
-            (article_id, bands) = item
-            lsh.datastore.add_to_matrix(article_id, bands)
+    def reducer_counter(self, key, items):
+        yield key, sum(items)
 
-
-    def reducer_datastore_final(self):
-        yield 'done', None
 
 
 
