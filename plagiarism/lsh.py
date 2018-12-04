@@ -33,7 +33,7 @@ class LSH:
         doc = re.sub(r'[^a-zA-Z0-9\s]+', '', doc)
         doc = re.sub(r'\s+', ' ', doc).strip()
         doc = doc.lower()
-        
+
         # Remove stop words
         stop_words = set(stopwords.words('english'))
         doc_tokens = word_tokenize(doc)
