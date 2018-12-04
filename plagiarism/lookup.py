@@ -4,6 +4,7 @@ import util
 import os
 from datastore import SQLiteDatastore
 import config
+import random
 
 SPACE = u' '
 
@@ -35,13 +36,13 @@ class CandidatesMapReducer(MRJob):
         line = lsh.clean_document(line)
         para = util.split_document(SPACE.join([line, self.remaining]))
         for p in para[0:-1]:
-            yield None, p
+            yield random.randint(0, 1<<32), p
         if len(para) > 0:
             self.remaining = para[-1]
 
 
     def mapper_paragraphs_final(self):
-        yield None, self.remaining
+        yield random.randint(0, 1<<32), self.remaining
 
 
     def reducer_minhash(self, _, paras):
