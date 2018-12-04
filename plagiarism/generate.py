@@ -34,14 +34,13 @@ class GeneratorMapReducer(MRJob):
 
 
     def mapper_articles(self, article_id, article):
-        article = lsh.clean_document(article)
         paras = util.split_document(article)
         for p in paras:
             yield article_id, p
 
 
-    def reducer_minhash(self, article_id, para):
-        for p in para:
+    def reducer_minhash(self, article_id, paras):
+        for p in paras:
             try:
                 sig = lsh.signature(p)
                 bands = lsh.partition_signature(sig)
