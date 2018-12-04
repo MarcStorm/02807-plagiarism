@@ -1,4 +1,4 @@
-from .util import listhash, split_document
+from util import listhash, split_document
 from nltk import ngrams
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -23,10 +23,6 @@ class LSH:
         self.paragraph_counter = 0
         self.paragraphs = paragraphs
         self.lock = threading.Lock()
-
-        # Download necessary resources
-        nltk.download('punkt')
-        nltk.download('stopwords')
 
 
     def clean_document(self, doc):
@@ -197,6 +193,7 @@ class LSH:
                 pass
         
         return list(candidates)
+
 
 
     def set_datastore(self, datastore):

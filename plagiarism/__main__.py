@@ -1,6 +1,7 @@
 from .lsh import LSH
 from .wiki import Wiki
 from .datastore import PickleDatastore, SQLiteDatastore
+from .mapreduce import CandidatesMapReducer
 import multiprocessing
 from enum import Enum
 import itertools
@@ -52,6 +53,12 @@ if __name__ == '__main__':
 
 
     def cmd_lookup(args):
+
+        job = CandidatesMapReducer(args.lsh, args=['-r', 'local'])
+        with job.make_runner() as runner:
+            runner.run()
+
+        return
 
         content = None
 
