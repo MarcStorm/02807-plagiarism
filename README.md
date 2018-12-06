@@ -34,7 +34,7 @@ https://dumps.wikimedia.org/enwiki/
 
 You will need to download the compressed `*.xml.bz2` file (around 15 GB) and the index `*.txt.bz2` file (around 200 MB). Put both files in the `resources/wiki` folder and decompress the index file (*NOT* the archive). The decompressed index file will be around 600 MB. Afterwards update the `config.py` file accordingly.
 
-You can now generate articles from the Wikipedia dump to stdout using the `wiki.py` module. The following will output a snipped of the first 10 articles:
+You can now generate articles from the Wikipedia dump to stdout using the `wiki.py` module. The following will output a snippet of the first 10 articles:
 ```bash
 python wiki.py ls -O -d --limit 10 | cut -c-80
 ```
