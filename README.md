@@ -23,7 +23,7 @@ cp config.example.py config.py
 
 # Running
 ## Finding candidates
-Using the sample dataset you can test run the application of finding candidates:
+Using the included sample dataset you can test run the application of finding candidates:
 ```bash
 ./lookup.sh resources/test/test1.txt
 ```
