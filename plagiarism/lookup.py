@@ -59,7 +59,7 @@ class CandidatesMapReducer(MRJob):
         candidates = set()
         for c in cands:
             candidates |= set(c)
-        yield 'Candidates', list(candidates)
+        yield 'candidates', list(candidates)
 
 
 if __name__ == '__main__':
