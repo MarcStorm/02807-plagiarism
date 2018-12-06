@@ -3,13 +3,31 @@
 % What is good about your solution/what could be improved
 
 
+% Talk about what splitting the document into smaller pieces does
+% - Allow to match against multiple documents and not just the similarity against a single one.
+% - The space usage of the data structure grows proportionally with the amount of paragraphs
+
+% If the document/paragraph is too short, then the program breaks because of the shingles. Mention
+
 \paragraph{Database}
 % Mention limitations of SQLite, i.e. crash when many threads working on it.
 % Lookup in a database is slower than having datastructure in RAM.
-We have made the choice of using a database instead of storing the LSH datastructure in memory which has some trade-offs. Accessing data from disk will be much slower than accessing it from memory and thus will decrease lookup times. Asymptotically however there is no difference because we still have to perform $b$ lookups, one for each band. The performance decrease can be tolerated since the lookup time is not significantly important to the speed of the algorithm as a whole, and in practice only accounts for a small fraction of the total execution time. In fact, generating shingles and computing minhashes is the single most intensive task of finding candidates.
+% Mention that in reality you should use a production database
+We have made the choice of using a database instead of storing the LSH data structure in memory which has some trade-offs. Accessing data from disk will be much slower than accessing it from memory and thus will decrease lookup times. Asymptotically however there is no difference because we still have to perform $b$ lookups, one for each band. The performance decrease can be tolerated since the lookup time is not significantly important to the speed of the algorithm as a whole, and in practice only accounts for a small fraction of the total execution time. In fact, generating shingles and computing minhashes is the single most intensive task of finding candidates.
 
+\paragraph{LSH}
+% The report does not discuss the benefits and downsides of LHS and what they mean for this project (compared documents have to be similar in length for it to detect candidates i.e).
+
+\subsection{Alternative solutions}
 
 % Future work / what could be improved
+\subsection{Future work}
+\paragraph{Citations}
+Should the solution detect that something was plagiarised from a Wikipedia article with the current implementation, it is unable to check whether it was cited or not. If the text has been cited correctly it should ideally not be marked as plagiarised. For further improvements of the application one could consider to implement support for this. As well as being able to cross check that the cited text is actually coming from the reference. Even though there are guidelines for citing, it could vary a lot from document to document, so a robust regular expression would have to be set up, to find the varying citations. Furthermore will the cross checking rely on how the reference was entered in the document itself, in order for the tool to correctly find it. Should one decide to implement the cross checker, it would either require the reference to be a Wikipedia article or require the database to be extended with more than just Wikipedia articles.
 
+\paragraph{Highlighting plagiarised content}
+The current implementation will only present the user with a list of candidate where the contents of the query document could be plagiarised from. 
 
-% If the document/paragraph is too short, then the program breaks because of the shingles. Mention
+\paragraph{Filtration of candidates}
+% Explain how candidates could be filtered based on a similarity.
+% The is nothing covering how candidates are tested for actual similarity to filter out the false positives.
