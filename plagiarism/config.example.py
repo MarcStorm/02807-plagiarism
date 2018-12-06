@@ -24,4 +24,4 @@ Path to SQLite database
 Example:
     /home/johndoe/src/matrix.sqlite
 """
-SQLITE_PATH=os.path.join(PATH, "resources/lsh/matrix.sqlite")
+SQLITE_PATH=os.path.join(PATH, "resources/lsh/matrix.sample.sqlite")
