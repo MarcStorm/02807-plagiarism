@@ -1,4 +1,4 @@
-# How to setup
+# Setting up
 The following instructions are intended for unix/linux environments.
 
 Start by (optionally) setting up a virtual environment with python 3.5.x
