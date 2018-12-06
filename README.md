@@ -3,8 +3,7 @@ The following instructions are intended for unix/linux environments.
 
 Start by (optionally) setting up a virtual environment with python 3.5.x
 ```bash
-virtualenv venv
-source venv/bin/activate
+virtualenv venv && source venv/bin/activate
 ```
 
 Run the makefile to install dependencies and setup the environment:
