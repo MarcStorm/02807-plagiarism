@@ -7,28 +7,24 @@ virtualenv venv
 source venv/bin/activate
 ```
 
-Install python dependencies
+Run the makefile to install dependencies and setup the environment:
 ```bash
-pip install -r requirements.txt
+make setup
 ```
 
+# Running
+## Finding candidates
 Move into the module folder:
 ```bash
 cd plagiarism
 ```
 
-Setup configuration file
-```bash
-cp config.example.py config.py
-```
-(you may edit the configuration file as needed for your environment)
-
-# Running
-## Finding candidates
 Using the included sample dataset you can test run the application of finding candidates:
 ```bash
 ./lookup.sh resources/test/test1.txt
 ```
+
+You may optionally try to play around with the supplied articles in `resources/samples`.
 
 ## Generating datastructure
 To generate a dataset of your own you will need to aqcuire the Wikipedia database from:
