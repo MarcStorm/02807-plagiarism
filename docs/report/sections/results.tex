@@ -1,9 +1,26 @@
 \section{Results}
 % Your results (ie. what have you managed to make)
 % Did your solution work as expected/desired
+Through empirical testing we achieved great performance when querying documents against the data base and finding candidates. The file \verb=test1.txt= contains fragments of the following articles with ID: 634, 308, 594. Passing this file to the lookup operation will give the result: \verb="candidates" [634, 308, 594]=, which is exactly what we want. Moreover it has shown to be possible to make changes to the stop words, white space characters and punctuation of the query document without affecting the result.
 
 % Mention something about the implementation of mapreduce will only give better performance when used on a cluster with multiple nodes. We tested locally which is the equivalent to using a cluster with one node.
+\paragraph{MapReduce}
+The implementation of MapReduce has shown to be a success in terms of distributing the work. However the MapReduce implementation only gives a better performance when executed on a cluster with multiple nodes. The testing performed during the development of this solution has been tested locally, which is the equivalent of using a cluster with a single node.
 
-% Database
-% Theoretical size
-% Overhead
+\paragraph{Database}
+The database generated for 1000 articles, where a document is split into paragraphs of 80 words and has a $50\%$ overlap resulted in 56834 paragraphs. This means that there are 56.83 paragraphs per article on average. Assuming this sample for a 1000 articles holds for all articles, it result in roughly 1.65 billion paragraphs for all 29 million English Wikipedia articles. The theoretical space usage of storing hash values for these would at most be
+\begin{align*}
+    4\, \textit{bytes} \cdot 1.65 \cdot 10^9 = 6.6 \cdot 10^9\, \textit{bytes} = 6.6\, \textit{GB}
+\end{align*}
+
+The space usage of the database of paragraphs for 1000 articles has a space usage of 104.7 MB. Assuming that this scales proportionally with the amount of paragraphs and assuming that each article has the same amount of paragraphs on average, the theoretical space usage of the database for all 29 million English Wikipedia articles will be
+\begin{align*}
+    \frac{104.7\, \textit{MB}}{1000\, \textit{articles}} \cdot 29 \cdot 10^6\, \textit{articles} = 3036300\, \textit{MB} \approx 3.04\, \textit{TB}
+\end{align*}
+
+It is clear to see that there is a massive overhead. Of course it needs to be taken into account that in the worst case, 5 values (including the hash value) are stored for each paragraph, as well as having indexed three of the columns in the two tables. SQLite's integer datatype changes dynamically in size to support the value stored in the field.\footnote{\url{https://www.sqlite.org/datatype3.html}} The largest value stored will fit in a 4 byte integer. Assuming 4 bytes are used for all integers in the database and a new row is added in both tables for each paragraph, i.e. storing five 4 byte values per paragraph, we get a total space usage of
+\begin{align*}
+    5 \cdot 4\, \textit{bytes} \cdot 1.65 \cdot 10^9 = 33 \cdot 10^9\, \textit{bytes} = 33\, \textit{GB}
+\end{align*}
+
+This is a more accurate estimate of the minimal space usage but it is clear to see that SQLite has issues with scaling.
