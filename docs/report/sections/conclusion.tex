@@ -1,2 +1,4 @@
 \section{Conclusion}
+This paper shows that we have successfully created a solution that can find candidates of Wikipedia articles for which a query document could be plagiarised from, by using a dump of Wikipedia articles, Locality-Sensitive Hashing, MapReduce and SQLite. Furthermore is has shown to be possible to create a query document by stitching together fragments of articles and by passing the query document to the solution, get the article IDs from where the fragments were taken from in a list.
 
+The addition of a database has shown to be a good decision to store the data structure in, as the creation of it takes a fair amount time even when running concurrently on a cluster with multiple nodes by MapReduce. Moreover, the space usage of data structure does grow rapidly and exceed the memory limits of what is normally found on a personal computer or even a server.

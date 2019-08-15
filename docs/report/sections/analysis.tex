@@ -1,28 +1,28 @@
 \section{Analysis}
 % Tools used to solve the problem
 
-Below are the requirements of the solution to find candidate of Wikipedia articles for which the text content of a document or paragraph could be plagiarised from.
+Below are the requirements of the solution to find candidates of Wikipedia articles for which the text content of a document or paragraph could be plagiarised from.
 
 %Ordered list
 \begin{enumerate}
-    \item Parser to read articles from Wikipedia's database
+    \item Parse and read articles from Wikipedia database dump
     \item Transform relevant data from articles to perform a plagiarism comparison on a query document
-    \item Storage solution of the transformed data
+    \item Storage solution for the transformed data
     \item Given a query document, find similar documents
-    \item Increase performance for large documents and large amounts of documents with massively parallel computation
+    \item Increase performance for large documents and large amount of documents with massively parallel computation
 \end{enumerate}
 
 % Only searching for whole articles that are similar or example is much easier that to check if a given document as copied small sections from many different documents.
 
-The first item on the list above allows the solution to parse a number of articles from the Wikipedia database. The parser should read the articles from an offline XML dump of the English Wikipedia articles. More specifically has the dump from 20 October 2018 been used for the testing of the solution.\footnote{\url{https://meta.wikimedia.org/wiki/Data_dump_torrents##English_Wikipedi}} In its compressed form this archive uses approximately 16 GB of space and approximately 55 GB when decompressed. As the focus is on detecting plagiarism in text, should the parser only parse the cleaned text of the articles. Furthermore should the parser allow to use the solution on a subset of the articles from the database.
+The first item on the list above allows the solution to parse a number of articles from the Wikipedia database. The parser should read the articles from an offline XML dump of the English Wikipedia articles. More specifically has the dump from 20 October 2018 been used for the testing of the solution.\footnote{\url{https://meta.wikimedia.org/wiki/Data_dump_torrents##English_Wikipedi}} In its compressed form this archive uses approximately 16 GB of space and approximately 55 GB when decompressed. As the focus is on detecting plagiarism in text, the parser should only parse the cleaned text of the articles, which has been stripped from markup. Furthermore the parser should allow to use the solution on a subset of the articles from the database.
 
 The second item should use \emph{Locality-Sensitive Hashing}, (\emph{LSH}), to represent the content of the articles, in a more compact and efficient way. This representation should split the content of an article into smaller pieces. Splitting the document into smaller pieces will allow the solution to detect plagiarism on a document which content has been taken from multiple Wikipedia articles, rather than just a single article.
 
-The third item should extend the solution with a \emph{SQLite} database to allow for the result of LSH for a large number of articles to be stored and be used for future queries furthermore avoiding to preprocess the Wikipedia database more than once. 
+The third item should extend the solution with a \emph{SQLite} database to allow for the result of LSH for a large number of articles to be stored and be used for future queries as well as avoiding to preprocess the Wikipedia database more than once. 
 
-The forth item should allow the user of the solution to query the solution with a document and find the IDs of the Wikipedia articles that are considered to be candidates from where the query document was plagiarised from.
+The forth item should allow the user of the solution to query it with a document and find the IDs of the Wikipedia articles that are considered to be candidates from where the query document was plagiarised from.
 
-Finally to speed up the processing of both large number and long documents, should \emph{MapReduce} be added to allow for massively parallel computation, that is dividing the workload to multiple nodes in a cluster.
+Finally to speed up the processing of both large number of and long documents, \emph{MapReduce} should be added to allow for massively parallel computation, that is dividing the workload to multiple nodes in a cluster.
 
 \subsection{Terminology}
 \begin{tabular}{cp{0.6\textwidth}}
