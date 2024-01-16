@@ -35,5 +35,5 @@ s3transfer==0.1.13
 singledispatch==3.4.0.3
 six==1.11.0
 typed-ast==1.1.0
-urllib3==1.24.1
+urllib3==1.26.18
 wrapt==1.10.11
